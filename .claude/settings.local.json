@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(git push *)",
+      "Bash(curl -s -X PATCH https://api.github.com/repos/felixasem/sharpcutsbarber -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"default_branch\":\"main\"}')",
+      "Bash(python -c ' *)",
+      "Bash(curl -s -X POST https://api.github.com/repos/felixasem/sharpcutsbarber/pulls *)",
+      "Bash(git branch *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'chore: update settings and next-env after branch operations *)",
+      "Bash(git reset *)",
+      "Bash(git commit -m 'chore: update settings and redact token from allowlist *)",
+      "Bash(git remote *)",
+      "Bash(git commit -m 'chore: add git remote permission to allowlist *)"
+    ]
+  }
+}

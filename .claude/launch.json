@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "SharpCuts Barbershop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "C:\\Users\\SYSTEMS\\CLAUDEPRJ",
+      "port": 3000
+    },
+    {
+      "name": "ai-notes",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "C:\\Users\\SYSTEMS\\CLAUDEPRJ\\ai-notes",
+      "port": 3001
+    }
+  ]
+}
