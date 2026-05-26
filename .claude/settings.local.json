@@ -10,7 +10,9 @@
       "Bash(git add *)",
       "Bash(git commit -m 'chore: update settings and next-env after branch operations *)",
       "Bash(git reset *)",
-      "Bash(git commit -m 'chore: update settings and redact token from allowlist *)"
+      "Bash(git commit -m 'chore: update settings and redact token from allowlist *)",
+      "Bash(git remote *)",
+      "Bash(git commit -m 'chore: add git remote permission to allowlist *)"
     ]
   }
 }
