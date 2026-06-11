@@ -13,8 +13,8 @@ const SOCIALS = [
 
 export default function Contact() {
   return (
-    <section id="contact" className="relative overflow-hidden bg-ink-950 px-6 py-28 sm:px-10">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-acid-400/10 blur-[120px]" />
+    <section id="contact" className="relative z-0 overflow-hidden bg-ink-950 px-6 py-28 sm:px-10">
+      <div className="pointer-events-none absolute left-1/2 top-0 z-0 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-acid-400/10 blur-[120px]" />
 
       <div className="mx-auto max-w-7xl text-center">
         <Reveal>

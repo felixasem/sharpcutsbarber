@@ -38,7 +38,7 @@ export default function HeroScene() {
       color: 0xd6ff3f,
       wireframe: true,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.32,
     });
     const core = new THREE.Mesh(coreGeometry, coreMaterial);
     scene.add(core);
@@ -49,7 +49,7 @@ export default function HeroScene() {
       color: 0x6d6dff,
       wireframe: true,
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.1,
     });
     const shell = new THREE.Mesh(shellGeometry, shellMaterial);
     scene.add(shell);
@@ -139,7 +139,7 @@ export default function HeroScene() {
   return (
     <div
       ref={mountRef}
-      className="absolute inset-0 -z-10 [&>canvas]:!h-full [&>canvas]:!w-full"
+      className="pointer-events-none absolute inset-0 z-0 [&>canvas]:!h-full [&>canvas]:!w-full"
       aria-hidden="true"
     />
   );

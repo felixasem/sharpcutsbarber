@@ -41,12 +41,12 @@ export default function Hero() {
     <section
       id="top"
       ref={containerRef}
-      className="relative flex min-h-[100svh] flex-col justify-between overflow-hidden bg-ink-950 px-6 pb-10 pt-32 sm:px-10"
+      className="relative z-0 flex min-h-[100svh] flex-col justify-between overflow-hidden bg-ink-950 px-6 pb-10 pt-32 sm:px-10"
     >
       <HeroScene />
 
       {/* Gradient veil for legibility */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-ink-950/10 via-ink-950/40 to-ink-950" />
+      <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-ink-950/40 via-ink-950/55 to-ink-950" />
 
       <div className="mx-auto w-full max-w-7xl">
         <p className="hero-eyebrow flex items-center gap-3 text-sm uppercase tracking-[0.3em] text-white/50">
