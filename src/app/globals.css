@@ -26,3 +26,11 @@
     display: none;
   }
 }
+
+/* Designer portfolio page */
+@media (pointer: fine) {
+  .designer-page,
+  .designer-page * {
+    cursor: none;
+  }
+}
