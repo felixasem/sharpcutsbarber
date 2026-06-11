@@ -8,19 +8,23 @@
 <style>
   /* ============ DESIGN TOKENS ============ */
   :root {
-    --bg: #0b0e1a;
-    --bg-soft: #11152a;
-    --surface: rgba(255, 255, 255, 0.04);
+    --bg: #05060f;
+    --bg-soft: #0b0e1e;
+    --surface: rgba(255, 255, 255, 0.035);
     --surface-strong: rgba(255, 255, 255, 0.07);
-    --border: rgba(255, 255, 255, 0.10);
-    --text: #eef0ff;
+    --border: rgba(255, 255, 255, 0.09);
+    --text: #f1f2ff;
     --text-dim: #9aa0c3;
-    --accent: #7c5cff;
-    --accent-2: #00d4ff;
-    --accent-3: #ff5c9e;
+    --accent: #8b5cf6;
+    --accent-2: #22d3ee;
+    --accent-3: #f472b6;
+    --gold: #f0c987;
     --success: #2dd4a0;
     --radius: 18px;
     --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    /* premium gradient borders: paint fill on padding-box, gradient on border-box */
+    --grad-border: linear-gradient(150deg, rgba(139, 92, 246, 0.55), rgba(255, 255, 255, 0.06) 35%, rgba(34, 211, 238, 0.35) 70%, rgba(244, 114, 182, 0.4));
+    --grad-fill: linear-gradient(160deg, rgba(19, 22, 42, 0.92), rgba(9, 11, 24, 0.92));
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -94,21 +98,38 @@
     color: transparent;
   }
 
-  /* ============ NAV ============ */
+  /* ============ GLASS HEADER ============ */
   nav {
     position: sticky;
-    top: 0;
+    top: 14px;
     z-index: 50;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    background: rgba(11, 14, 26, 0.72);
-    border-bottom: 1px solid var(--border);
+    width: min(1120px, 94%);
+    margin: 14px auto 0;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(120deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025) 40%, rgba(255,255,255,0.06)) padding-box,
+      linear-gradient(120deg, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 35%, rgba(139,92,246,0.35) 70%, rgba(34,211,238,0.3)) border-box;
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: box-shadow 0.3s ease, background 0.3s ease, transform 0.3s ease;
+  }
+  nav.scrolled {
+    box-shadow:
+      0 18px 50px rgba(0, 0, 0, 0.55),
+      0 4px 18px rgba(139, 92, 246, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
   .nav-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 64px;
+    height: 60px;
+    padding: 0 22px;
+    width: 100%;
   }
   .logo {
     display: flex;
@@ -118,7 +139,9 @@
     font-size: 1.05rem;
     text-decoration: none;
     color: var(--text);
+    transition: transform 0.2s ease;
   }
+  .logo:hover { transform: translateY(-1px); }
   .logo-mark {
     width: 32px; height: 32px;
     border-radius: 9px;
@@ -126,16 +149,48 @@
     place-items: center;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     font-size: 1rem;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.45);
   }
-  .nav-links { display: flex; gap: 28px; align-items: center; }
-  .nav-links a {
+  .nav-links { display: flex; gap: 26px; align-items: center; }
+  .nav-links a:not(.btn) {
+    position: relative;
     color: var(--text-dim);
     text-decoration: none;
     font-size: 0.92rem;
     font-weight: 500;
-    transition: color 0.2s;
+    padding: 6px 2px;
+    transition: color 0.25s ease, transform 0.25s ease;
   }
-  .nav-links a:hover { color: var(--text); }
+  .nav-links a:not(.btn)::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.28s ease;
+  }
+  .nav-links a:not(.btn):hover {
+    color: var(--text);
+    transform: translateY(-2px);
+  }
+  .nav-links a:not(.btn):hover::after { transform: scaleX(1); }
+
+  .nav-toggle {
+    display: none;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    font-size: 1.15rem;
+    cursor: pointer;
+    place-items: center;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .nav-toggle:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-1px); }
 
   /* ============ BUTTONS ============ */
   .btn {
@@ -167,18 +222,118 @@
   .btn-ghost:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
 
   /* ============ HERO ============ */
-  .hero { padding: 110px 0 80px; text-align: center; }
+  .hero {
+    position: relative;
+    padding: 130px 0 90px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero .container { position: relative; z-index: 1; }
   .hero h1 {
-    font-size: clamp(2.4rem, 6vw, 4.3rem);
-    margin-bottom: 22px;
+    font-size: clamp(2.9rem, 8vw, 5.6rem);
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    margin-bottom: 26px;
   }
   .hero p.lede {
-    max-width: 620px;
-    margin: 0 auto 38px;
+    max-width: 640px;
+    margin: 0 auto 42px;
     color: var(--text-dim);
-    font-size: clamp(1rem, 2vw, 1.18rem);
+    font-size: clamp(1rem, 2vw, 1.22rem);
   }
-  .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; align-items: center; }
+
+  /* subtle decorative gradient shapes */
+  .hero-shapes { position: absolute; inset: 0; pointer-events: none; }
+  .shape { position: absolute; display: block; }
+  .shape-glow {
+    width: 640px; height: 640px;
+    left: 50%; top: -160px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.18), rgba(34, 211, 238, 0.06) 45%, transparent 70%);
+    filter: blur(10px);
+  }
+  .shape-ring {
+    width: 380px; height: 380px;
+    top: 4%; right: -110px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(139, 92, 246, 0.3);
+    animation: spinSlow 70s linear infinite;
+  }
+  .shape-ring-2 {
+    width: 240px; height: 240px;
+    bottom: 6%; left: -70px;
+    border-radius: 50%;
+    border: 1px solid rgba(34, 211, 238, 0.18);
+    animation: spinSlow 50s linear infinite reverse;
+  }
+  .shape-square {
+    width: 26px; height: 26px;
+    top: 24%; left: 9%;
+    border-radius: 7px;
+    transform: rotate(20deg);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(34, 211, 238, 0.35));
+    opacity: 0.55;
+    animation: floaty 7s ease-in-out infinite;
+  }
+  .shape-dot {
+    width: 14px; height: 14px;
+    top: 38%; right: 12%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.6), rgba(240, 201, 135, 0.5));
+    opacity: 0.6;
+    animation: floaty 6s ease-in-out infinite -2s;
+  }
+  .shape-tri {
+    width: 0; height: 0;
+    bottom: 22%; right: 8%;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 20px solid rgba(34, 211, 238, 0.35);
+    animation: floaty 8s ease-in-out infinite -4s;
+  }
+  @keyframes spinSlow { to { transform: rotate(360deg); } }
+
+  /* premium CTA */
+  .btn-cta {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 17px 42px;
+    border-radius: 15px;
+    background: linear-gradient(120deg, var(--accent), #6d3df5 40%, var(--accent-2));
+    background-size: 200% 200%;
+    box-shadow:
+      0 14px 40px rgba(139, 92, 246, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    animation: ctaShift 7s ease infinite;
+  }
+  .btn-cta::after {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    left: -80%;
+    width: 50%;
+    background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.55s ease;
+  }
+  .btn-cta:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+      0 20px 54px rgba(139, 92, 246, 0.6),
+      0 6px 20px rgba(34, 211, 238, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .btn-cta:hover::after { left: 130%; }
+  @keyframes ctaShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 
   .hero-stats {
     margin-top: 70px;
@@ -230,16 +385,18 @@
     margin-top: 48px;
   }
   .feature {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
+    background:
+      var(--grad-fill) padding-box,
+      linear-gradient(150deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)) border-box;
     border-radius: var(--radius);
     padding: 28px 24px;
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s;
+    transition: transform 0.2s ease, background 0.25s ease, box-shadow 0.25s ease;
   }
   .feature:hover {
     transform: translateY(-5px);
-    border-color: rgba(124, 92, 255, 0.5);
-    background: var(--surface-strong);
+    background: var(--grad-fill) padding-box, var(--grad-border) border-box;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(139, 92, 246, 0.08);
   }
   .feature .icon {
     width: 46px; height: 46px;
@@ -261,12 +418,12 @@
   /* ============ PLANNER FORM ============ */
   .planner-card {
     margin-top: 48px;
-    background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
+    background: var(--grad-fill) padding-box, var(--grad-border) border-box;
     border-radius: 24px;
     padding: clamp(24px, 5vw, 48px);
     backdrop-filter: blur(12px);
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
   }
 
   .form-grid {
@@ -397,11 +554,14 @@
   }
 
   .plan-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
+    background:
+      var(--grad-fill) padding-box,
+      linear-gradient(150deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04) 45%, rgba(139,92,246,0.22)) border-box;
     border-radius: var(--radius);
     padding: 26px;
     backdrop-filter: blur(8px);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.35);
   }
   .plan-card h3 {
     display: flex;
@@ -506,6 +666,124 @@
 
   .plan-actions { margin-top: 30px; text-align: center; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
+  /* ============ WEEKLY PLANNER ============ */
+  #week-section { display: none; padding-top: 0; }
+  #week-section.visible { display: block; animation: fadeUp 0.6s ease both; }
+
+  .week-progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 560px;
+    margin: 0 auto 38px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--surface-strong);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3));
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.6);
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 14px;
+  }
+  .day-card {
+    border: 1px solid transparent;
+    background:
+      var(--grad-fill) padding-box,
+      linear-gradient(165deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04) 50%, rgba(34,211,238,0.18)) border-box;
+    border-radius: var(--radius);
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease, background 0.25s ease, box-shadow 0.25s ease;
+    animation: fadeUp 0.5s ease both;
+  }
+  .day-card:hover {
+    transform: translateY(-4px);
+    background: var(--grad-fill) padding-box, var(--grad-border) border-box;
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+  }
+  .day-card.weekend {
+    background:
+      linear-gradient(160deg, rgba(30, 24, 48, 0.92), rgba(12, 10, 26, 0.92)) padding-box,
+      linear-gradient(165deg, rgba(240,201,135,0.4), rgba(255,255,255,0.05) 50%, rgba(244,114,182,0.3)) border-box;
+  }
+  .day-head { text-align: center; }
+  .day-head .day-name {
+    display: block;
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+  }
+  .day-head .day-theme {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: linear-gradient(100deg, var(--accent-2), var(--accent-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .day-tasks { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .day-task {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+  }
+  .day-task:hover { border-color: var(--accent-2); color: var(--text); }
+  .day-task .tick {
+    flex: none;
+    width: 16px; height: 16px;
+    margin-top: 1px;
+    border-radius: 6px;
+    border: 1.5px solid var(--text-dim);
+    display: grid;
+    place-items: center;
+    font-size: 0.6rem;
+    color: transparent;
+    transition: all 0.2s;
+  }
+  .day-task.done {
+    opacity: 0.6;
+    text-decoration: line-through;
+    border-color: rgba(45, 212, 160, 0.4);
+  }
+  .day-task.done .tick {
+    background: var(--success);
+    border-color: var(--success);
+    color: #04140e;
+  }
+
   /* AI "thinking" loader */
   #loader {
     display: none;
@@ -538,6 +816,123 @@
   }
   footer a { color: var(--accent-2); text-decoration: none; }
 
+  /* ============ TOAST NOTIFICATIONS ============ */
+  #toast-stack {
+    position: fixed;
+    top: 96px;
+    right: 18px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(390px, calc(100vw - 32px));
+    pointer-events: none;
+  }
+  .toast {
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px 16px 17px 15px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    background:
+      var(--grad-fill) padding-box,
+      linear-gradient(150deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05)) border-box;
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    animation: toastIn 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+  }
+  .toast.leaving { animation: toastOut 0.3s ease both; }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(48px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(48px); }
+  }
+  .toast.error {
+    background:
+      linear-gradient(160deg, rgba(42, 16, 30, 0.94), rgba(16, 9, 20, 0.94)) padding-box,
+      linear-gradient(150deg, rgba(244, 114, 182, 0.6), rgba(255,255,255,0.06) 45%, rgba(244, 114, 182, 0.35)) border-box;
+  }
+  .toast.success {
+    background:
+      linear-gradient(160deg, rgba(13, 36, 30, 0.94), rgba(8, 14, 18, 0.94)) padding-box,
+      linear-gradient(150deg, rgba(45, 212, 160, 0.6), rgba(255,255,255,0.06) 45%, rgba(45, 212, 160, 0.3)) border-box;
+  }
+  .toast .t-icon {
+    flex: none;
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    font-size: 1.05rem;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--border);
+  }
+  .toast.error .t-icon { background: rgba(244, 114, 182, 0.15); border-color: rgba(244, 114, 182, 0.4); }
+  .toast.success .t-icon { background: rgba(45, 212, 160, 0.15); border-color: rgba(45, 212, 160, 0.4); }
+  .toast .t-body { flex: 1; min-width: 0; }
+  .toast .t-body strong { display: block; font-size: 0.92rem; margin-bottom: 2px; }
+  .toast .t-body p { font-size: 0.84rem; color: var(--text-dim); line-height: 1.45; }
+  .toast .t-hint {
+    display: flex;
+    gap: 7px;
+    margin-top: 9px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px dashed var(--border);
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+  .toast .t-close {
+    flex: none;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+  }
+  .toast .t-close:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+  .toast .t-bar {
+    position: absolute;
+    left: 0; bottom: 0;
+    height: 3px;
+    width: 100%;
+    transform-origin: left;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3));
+    animation: toastBar linear forwards;
+  }
+  .toast.error .t-bar { background: linear-gradient(90deg, var(--accent-3), #ff8da9); }
+  .toast.success .t-bar { background: linear-gradient(90deg, var(--success), var(--accent-2)); }
+  @keyframes toastBar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+  /* invalid form fields */
+  .invalid {
+    border-color: rgba(244, 114, 182, 0.7) !important;
+    box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.16) !important;
+  }
+  .pill-group.invalid {
+    border: 1px solid rgba(244, 114, 182, 0.5);
+    border-radius: 14px;
+    padding: 8px;
+  }
+
+  @media (max-width: 680px) {
+    #toast-stack { top: auto; bottom: 16px; right: 16px; left: 16px; width: auto; }
+  }
+
   /* ============ SCROLL REVEAL ============ */
   .reveal {
     opacity: 0;
@@ -547,16 +942,63 @@
   .reveal.in { opacity: 1; transform: translateY(0); }
 
   /* ============ RESPONSIVE ============ */
+  @media (max-width: 1080px) {
+    .week-grid { grid-template-columns: repeat(4, 1fr); }
+  }
   @media (max-width: 860px) {
     .plan-grid { grid-template-columns: 1fr; }
+    .week-grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 680px) {
     section { padding: 60px 0; }
     .hero { padding: 70px 0 50px; }
-    .nav-links a:not(.btn) { display: none; }
     .form-grid { grid-template-columns: 1fr; }
     .hero-stats { grid-template-columns: 1fr; max-width: 360px; }
     .timeline li { grid-template-columns: 70px 1fr; gap: 10px; }
+
+    /* glass dropdown menu */
+    .nav-toggle { display: grid; }
+    .nav-links {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      left: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid transparent;
+      background:
+        linear-gradient(160deg, rgba(16, 19, 38, 0.92), rgba(8, 10, 22, 0.94)) padding-box,
+        linear-gradient(140deg, rgba(255,255,255,0.2), rgba(139,92,246,0.35), rgba(34,211,238,0.25)) border-box;
+      backdrop-filter: blur(22px) saturate(170%);
+      -webkit-backdrop-filter: blur(22px) saturate(170%);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .nav-links.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .nav-links a:not(.btn) {
+      padding: 11px 14px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .nav-links a:not(.btn)::after { display: none; }
+    .nav-links a:not(.btn):hover {
+      background: rgba(255, 255, 255, 0.07);
+      transform: none;
+    }
+    .nav-links .btn { margin-top: 6px; }
+  }
+  @media (max-width: 440px) {
+    .week-grid { grid-template-columns: 1fr; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -573,15 +1015,18 @@
   <div class="orb orb-3"></div>
 </div>
 
-<!-- ============ NAV ============ -->
-<nav>
-  <div class="container nav-inner">
+<!-- ============ GLASS HEADER ============ -->
+<nav id="site-nav">
+  <div class="nav-inner">
     <a class="logo" href="#top">
       <span class="logo-mark">✦</span> AI Life Planner
     </a>
-    <div class="nav-links">
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">☰</button>
+    <div class="nav-links" id="nav-links">
+      <a href="#top">Home</a>
       <a href="#features">Features</a>
-      <a href="#planner">Planner</a>
+      <a href="#planner">Plans</a>
+      <a href="#contact">Contact</a>
       <a href="#planner" class="btn btn-primary" style="padding: 9px 18px; font-size: 0.88rem;">Get my plan</a>
     </div>
   </div>
@@ -589,15 +1034,23 @@
 
 <!-- ============ HERO ============ -->
 <header class="hero" id="top">
+  <div class="hero-shapes" aria-hidden="true">
+    <span class="shape shape-glow"></span>
+    <span class="shape shape-ring"></span>
+    <span class="shape shape-ring-2"></span>
+    <span class="shape shape-square"></span>
+    <span class="shape shape-dot"></span>
+    <span class="shape shape-tri"></span>
+  </div>
   <div class="container">
     <span class="eyebrow">✨ Your life, intelligently organized</span>
-    <h1>Design the life you want,<br><span class="gradient-text">one day at a time.</span></h1>
+    <h1>Design the life<br>you <span class="gradient-text">actually want.</span></h1>
     <p class="lede">
       AI Life Planner turns your goals, routines, and habits into a clear, personalized
       daily blueprint — so you spend less time planning and more time growing.
     </p>
     <div class="hero-cta">
-      <a href="#planner" class="btn btn-primary">Build my plan →</a>
+      <a href="#planner" class="btn btn-cta">✨ Build my plan — free</a>
       <a href="#features" class="btn btn-ghost">See how it works</a>
     </div>
 
@@ -765,17 +1218,136 @@
   </div>
 </section>
 
+<!-- ============ WEEKLY PLANNER ============ -->
+<section id="week-section" aria-live="polite">
+  <div class="container">
+    <div class="plan-header">
+      <span class="eyebrow">Step 3 · Your week at a glance</span>
+      <h2>Weekly <span class="gradient-text">Planner</span></h2>
+      <p>Each day has a theme and three focused tasks. Tap a task to mark it done — momentum is built one checkmark at a time.</p>
+    </div>
+
+    <div class="week-progress">
+      <div class="progress-track"><div class="progress-fill" id="week-progress-fill"></div></div>
+      <span class="progress-label" id="week-progress-label">0 / 0 done</span>
+    </div>
+
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+</section>
+
 <!-- ============ FOOTER ============ -->
-<footer>
+<footer id="contact">
   <div class="container">
     <p>✦ AI Life Planner — built to help you grow, one intentional day at a time.</p>
+    <p style="margin-top: 6px;">Contact: <a href="mailto:hello@ailifeplanner.app">hello@ailifeplanner.app</a></p>
     <p style="margin-top: 6px;">Your inputs never leave this page. <a href="#top">Back to top ↑</a></p>
   </div>
 </footer>
 
+<!-- ============ TOASTS ============ -->
+<div id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
 <script>
 (function () {
   "use strict";
+
+  /* ---------- toast notification system ---------- */
+  var toastStack = document.getElementById("toast-stack");
+  var ICONS = { error: "⚠️", success: "✅", info: "💬" };
+  var MAX_TOASTS = 4;
+
+  function dismissToast(t) {
+    if (t.classList.contains("leaving")) return;
+    t.classList.add("leaving");
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 320);
+  }
+
+  function showToast(opts) {
+    // keep the stack from overflowing
+    while (toastStack.children.length >= MAX_TOASTS) {
+      toastStack.removeChild(toastStack.firstChild);
+    }
+    var type = opts.type || "info";
+    var duration = opts.duration || (type === "error" ? 8000 : 5000);
+
+    var t = document.createElement("div");
+    t.className = "toast " + type;
+    t.setAttribute("role", type === "error" ? "alert" : "status");
+    t.innerHTML =
+      '<span class="t-icon">' + ICONS[type] + '</span>' +
+      '<div class="t-body">' +
+        '<strong></strong><p></p>' +
+        (opts.suggestion ? '<span class="t-hint"><span>💡</span><span class="t-hint-text"></span></span>' : '') +
+      '</div>' +
+      '<button class="t-close" aria-label="Dismiss notification">✕</button>' +
+      '<span class="t-bar" style="animation-duration:' + duration + 'ms"></span>';
+
+    // textContent assignment keeps any dynamic strings safely escaped
+    t.querySelector("strong").textContent = opts.title || "";
+    t.querySelector("p").textContent = opts.message || "";
+    if (opts.suggestion) t.querySelector(".t-hint-text").textContent = opts.suggestion;
+
+    t.querySelector(".t-close").addEventListener("click", function () { dismissToast(t); });
+    toastStack.appendChild(t);
+    setTimeout(function () { dismissToast(t); }, duration);
+    return t;
+  }
+
+  /* ---------- global error handling ---------- */
+  var lastGlobalToast = 0;
+  function globalErrorToast() {
+    var now = Date.now();
+    if (now - lastGlobalToast < 6000) return; // don't spam on repeated errors
+    lastGlobalToast = now;
+    showToast({
+      type: "error",
+      title: "Something went wrong",
+      message: "An unexpected error occurred while running the page.",
+      suggestion: "Refresh the page and try again. If it keeps happening, try a different browser."
+    });
+  }
+  window.addEventListener("error", globalErrorToast);
+  window.addEventListener("unhandledrejection", globalErrorToast);
+
+  /* ---------- network status ---------- */
+  window.addEventListener("offline", function () {
+    showToast({
+      type: "error",
+      title: "You're offline",
+      message: "Your internet connection was lost.",
+      suggestion: "Check your Wi-Fi or network cable. Good news: your planner runs fully in the browser, so you can keep working."
+    });
+  });
+  window.addEventListener("online", function () {
+    showToast({
+      type: "success",
+      title: "Back online",
+      message: "Your internet connection was restored."
+    });
+  });
+
+  /* ---------- glass header ---------- */
+  var nav = document.getElementById("site-nav");
+  var navToggle = document.getElementById("nav-toggle");
+  var navLinks = document.getElementById("nav-links");
+
+  window.addEventListener("scroll", function () {
+    nav.classList.toggle("scrolled", window.scrollY > 24);
+  }, { passive: true });
+
+  navToggle.addEventListener("click", function () {
+    var open = navLinks.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    navToggle.textContent = open ? "✕" : "☰";
+  });
+  navLinks.querySelectorAll("a").forEach(function (a) {
+    a.addEventListener("click", function () {
+      navLinks.classList.remove("open");
+      navToggle.setAttribute("aria-expanded", "false");
+      navToggle.textContent = "☰";
+    });
+  });
 
   /* ---------- scroll reveal ---------- */
   var revealEls = document.querySelectorAll(".reveal");
@@ -1004,6 +1576,86 @@
     /* --- mantra --- */
     document.getElementById("plan-mantra").textContent =
       "“" + MANTRAS[Math.floor(Math.random() * MANTRAS.length)] + "”";
+
+    buildWeek(goal, focus);
+  }
+
+  /* ---------- weekly planner ---------- */
+  var WEEK_DAYS = [
+    { name: "Monday",    theme: "Momentum",   icon: "🚀" },
+    { name: "Tuesday",   theme: "Build",      icon: "🔨" },
+    { name: "Wednesday", theme: "Deep Focus", icon: "🧠" },
+    { name: "Thursday",  theme: "Connect",    icon: "🤝" },
+    { name: "Friday",    theme: "Ship It",    icon: "📦" },
+    { name: "Saturday",  theme: "Recharge",   icon: "🌿", weekend: true },
+    { name: "Sunday",    theme: "Reflect",    icon: "🪞", weekend: true }
+  ];
+
+  function updateWeekProgress() {
+    var all = document.querySelectorAll("#week-grid .day-task");
+    var done = document.querySelectorAll("#week-grid .day-task.done");
+    var pct = all.length ? Math.round((done.length / all.length) * 100) : 0;
+    document.getElementById("week-progress-fill").style.width = pct + "%";
+    document.getElementById("week-progress-label").textContent =
+      done.length + " / " + all.length + " done";
+  }
+
+  function buildWeek(goal, focus) {
+    var grid = document.getElementById("week-grid");
+    grid.innerHTML = "";
+    var shortGoal = goal.length > 38 ? goal.slice(0, 38) + "…" : goal;
+
+    WEEK_DAYS.forEach(function (day, i) {
+      var tasks;
+      if (day.name === "Saturday") {
+        tasks = [
+          "Active recovery — walk, stretch, or play",
+          FOCUS_DATA[focus[focus.length - 1]].habit.name,
+          "Unplug for 2 screen-free hours"
+        ];
+      } else if (day.name === "Sunday") {
+        tasks = [
+          "Weekly review — 20 minutes",
+          "Plan next week's #1 priorities",
+          "Early night to bank energy"
+        ];
+      } else {
+        tasks = [
+          "Deep work: " + shortGoal,
+          FOCUS_DATA[focus[i % focus.length]].block.title,
+          "Evening 2-minute journal"
+        ];
+      }
+
+      var card = document.createElement("div");
+      card.className = "day-card" + (day.weekend ? " weekend" : "");
+      card.style.animationDelay = (i * 0.07) + "s";
+      card.innerHTML =
+        '<div class="day-head">' +
+          '<span class="day-name">' + day.icon + " " + day.name + '</span>' +
+          '<span class="day-theme">' + day.theme + '</span>' +
+        '</div>' +
+        '<ul class="day-tasks">' +
+          tasks.map(function (t) {
+            return '<li class="day-task" role="checkbox" aria-checked="false" tabindex="0">' +
+                   '<span class="tick">✓</span><span>' + t + '</span></li>';
+          }).join("") +
+        '</ul>';
+      grid.appendChild(card);
+    });
+
+    grid.querySelectorAll(".day-task").forEach(function (task) {
+      function toggle() {
+        task.classList.toggle("done");
+        task.setAttribute("aria-checked", task.classList.contains("done") ? "true" : "false");
+        updateWeekProgress();
+      }
+      task.addEventListener("click", toggle);
+      task.addEventListener("keydown", function (e) {
+        if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); }
+      });
+    });
+    updateWeekProgress();
   }
 
   /* ---------- submit flow with AI "thinking" ---------- */
@@ -1011,19 +1663,47 @@
   var loader = document.getElementById("loader");
   var loaderText = document.getElementById("loader-text");
   var planSection = document.getElementById("plan-section");
+  var weekSection = document.getElementById("week-section");
   var formError = document.getElementById("form-error");
+
+  var goalField = document.getElementById("goal");
+  var pillGroup = document.getElementById("focus-pills");
+
+  // clear error highlighting as soon as the user fixes the input
+  goalField.addEventListener("input", function () {
+    if (goalField.value.trim()) goalField.classList.remove("invalid");
+  });
+  pillGroup.addEventListener("click", function () {
+    if (getSelectedFocus().length) pillGroup.classList.remove("invalid");
+  });
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
 
-    var goal = document.getElementById("goal").value.trim();
-    if (!goal || getSelectedFocus().length === 0) {
+    var goal = goalField.value.trim();
+    var focusCount = getSelectedFocus().length;
+    var problems = [];
+
+    goalField.classList.toggle("invalid", !goal);
+    pillGroup.classList.toggle("invalid", focusCount === 0);
+    if (!goal) problems.push("share your #1 goal");
+    if (focusCount === 0) problems.push("pick at least one focus area");
+
+    if (problems.length) {
       formError.style.display = "block";
+      showToast({
+        type: "error",
+        title: "Almost there — a couple of things missing",
+        message: "We couldn't generate your plan because some required inputs are empty.",
+        suggestion: "Please " + problems.join(" and ") + ". The highlighted fields show exactly where."
+      });
+      (goal ? pillGroup : goalField).scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     formError.style.display = "none";
 
     planSection.classList.remove("visible");
+    weekSection.classList.remove("visible");
     loader.classList.add("visible");
     loader.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -1037,9 +1717,25 @@
     setTimeout(function () {
       clearInterval(ticker);
       loader.classList.remove("visible");
-      buildPlan();
+      try {
+        buildPlan();
+      } catch (err) {
+        showToast({
+          type: "error",
+          title: "Plan generation failed",
+          message: "Something went wrong while building your personalized plan.",
+          suggestion: "Refresh the page and submit the form again. If the problem persists, try simplifying your goal text."
+        });
+        return;
+      }
       planSection.classList.add("visible");
+      weekSection.classList.add("visible");
       planSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      showToast({
+        type: "success",
+        title: "Your plan is ready! 🎉",
+        message: "Your personalized blueprint and weekly planner have been generated below."
+      });
     }, 2300);
   });
 
@@ -1048,7 +1744,21 @@
   });
 
   document.getElementById("print-btn").addEventListener("click", function () {
-    window.print();
+    try {
+      window.print();
+      showToast({
+        type: "success",
+        title: "Print dialog opened",
+        message: "Choose “Save as PDF” as the destination to keep a copy of your plan."
+      });
+    } catch (err) {
+      showToast({
+        type: "error",
+        title: "Couldn't open the print dialog",
+        message: "Your browser blocked the print request.",
+        suggestion: "Use Ctrl+P (or Cmd+P on Mac) to print or save the page manually."
+      });
+    }
   });
 })();
 </script>
