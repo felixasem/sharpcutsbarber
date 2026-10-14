@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mediconny — Clinic &amp; Supplement Shop POS (Full-Stack Node.js)</title>
+  <style>
+    :root {
+      --bg: #f4f7f6;
+      --surface: #ffffff;
+      --surface-alt: #edf3f1;
+      --border: #d5e2de;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-light: #ccfbf1;
+      --accent: #d97706;
+      --accent-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --success: #15803d;
+      --success-light: #dcfce7;
+      --text: #132a28;
+      --text-muted: #526d6a;
+      --radius: 10px;
+      --shadow: 0 2px 8px rgba(15, 118, 110, 0.07);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header & Topbar */
+    .topbar {
+      background: var(--primary-dark);
+      color: #ffffff;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-weight: 800;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand h1 {
+      font-size: 1.18rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand p {
+      font-size: 0.77rem;
+      color: #a7f3d0;
+    }
+
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .server-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.32rem 0.68rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.14);
+      color: #ecfdf5;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+    }
+
+    .status-dot.local {
+      background: #fbbf24;
+    }
+
+    .currency-select {
+      background: rgba(255,255,255,0.14);
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.28);
+      padding: 0.4rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .currency-select option {
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    /* Navigation Tabs */
+    .nav-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      display: flex;
+      gap: 0.25rem;
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 0.9rem 1.1rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--primary);
+      background: var(--surface-alt);
+    }
+
+    .nav-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(15, 118, 110, 0.04);
+    }
+
+    .pill-count {
+      background: var(--surface-alt);
+      color: var(--primary-dark);
+      font-size: 0.73rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    /* Main Content Layout */
+    .main-container {
+      max-width: 1420px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.4rem;
+      flex: 1;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.35rem;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.05rem 1.2rem;
+      box-shadow: var(--shadow);
+    }
+
+    .kpi-label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 0.2rem;
+    }
+
+    .kpi-sub {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* Cards & Grids */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.95rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* POS Split Layout */
+    .pos-layout {
+      display: grid;
+      grid-template-columns: 1.45fr 1.05fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .pos-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 0.8rem;
+      margin-top: 0.9rem;
+    }
+
+    .product-tile {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.45rem;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+      cursor: pointer;
+    }
+
+    .product-tile:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .product-tile.out-of-stock {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .tile-cat {
+      font-size: 0.69rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--primary);
+      letter-spacing: 0.03em;
+    }
+
+    .tile-name {
+      font-size: 0.91rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .tile-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .tile-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.35rem;
+      padding-top: 0.45rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    .tile-price {
+      font-weight: 800;
+      font-size: 0.94rem;
+      color: var(--primary-dark);
+    }
+
+    /* Forms & Inputs */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 0.8rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+    }
+
+    .form-group label {
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    input[type="tel"],
+    input[type="email"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.52rem 0.68rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.86rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar input,
+    .filter-bar select {
+      width: auto;
+      min-width: 170px;
+      flex: 1;
+    }
+
+    /* Sub-panels inside POS */
+    .pos-subbox {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-top: 0.75rem;
+    }
+
+    .pos-subbox-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 0.55rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .split-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr auto;
+      gap: 0.45rem;
+      align-items: center;
+      margin-bottom: 0.45rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.52rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-outline:hover {
+      background: var(--surface-alt);
+      border-color: var(--primary);
+    }
+
+    .btn-ghost-light {
+      background: rgba(255,255,255,0.14);
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.28);
+      font-size: 0.79rem;
+      padding: 0.38rem 0.72rem;
+    }
+
+    .btn-ghost-light:hover {
+      background: rgba(255,255,255,0.24);
+    }
+
+    .btn-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-sm {
+      padding: 0.28rem 0.58rem;
+      font-size: 0.75rem;
+    }
+
+    /* Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      padding: 0.68rem 0.72rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface-alt);
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    tr:hover td {
+      background: rgba(15, 118, 110, 0.02);
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.16rem 0.52rem;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+    }
+
+    .badge-success {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .badge-warn {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .badge-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .badge-neutral {
+      background: var(--surface-alt);
+      color: var(--text-muted);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 1.75rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.86rem;
+    }
+
+    /* Cart specifics */
+    .cart-items {
+      max-height: 250px;
+      overflow-y: auto;
+      margin: 0.65rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .cart-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.84rem;
+    }
+
+    .qty-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.32rem;
+    }
+
+    .qty-btn {
+      width: 24px;
+      height: 24px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .cart-summary {
+      background: var(--surface-alt);
+      padding: 0.85rem;
+      border-radius: 8px;
+      margin-top: 0.75rem;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      border-top: 1px solid var(--border);
+      padding-top: 0.45rem;
+      margin-top: 0.35rem;
+    }
+
+    /* Modal / Receipt Preview */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(19, 42, 40, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      max-width: 540px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.4rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .receipt-box {
+      font-family: "Courier New", Courier, monospace;
+      background: #fafafa;
+      border: 1px dashed #bdbdbd;
+      padding: 1rem;
+      margin: 0.85rem 0;
+      font-size: 0.81rem;
+      white-space: pre-wrap;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #receiptModal, #receiptModal * {
+        visibility: visible;
+      }
+      #receiptModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: none;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">M</div>
+      <div>
+        <h1 id="headerClinicTitle">Mediconny Clinic &amp; Supplement Shop</h1>
+        <p>Full-Stack Node.js POS &bull; Vitamin Inventory &bull; Clinic Appointments &bull; Patients DB</p>
+      </div>
+    </div>
+    <div class="topbar-controls">
+      <div class="server-pill" title="Synchronizes automatically with Node.js server (/api) when running via node server.js">
+        <span id="serverDot" class="status-dot local"></span>
+        <span id="serverStatusText">Syncing...</span>
+      </div>
+      <label for="currencySelect" style="font-size:0.77rem; color:#d1fae5;">Currency:</label>
+      <select id="currencySelect" class="currency-select" onchange="updateCurrency(this.value)">
+        <option value="GHC">GHC (GH₵)</option>
+        <option value="GH₵">GH₵ (Symbol)</option>
+        <option value="$">$ (USD)</option>
+        <option value="€">€ (EUR)</option>
+        <option value="£">£ (GBP)</option>
+        <option value="₦">₦ (NGN)</option>
+      </select>
+      <button class="btn btn-ghost-light" onclick="exportAllDataJSON()">Export Backup</button>
+      <button class="btn btn-ghost-light" onclick="document.getElementById('importFile').click()">Restore Backup</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importAllDataJSON(event)" />
+      <button class="btn btn-ghost-light" onclick="clearAllData()">Reset All</button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-bar">
+    <button class="nav-tab active" onclick="switchTab('pos', this)">
+      <span>Shop POS &amp; Clinic Billing</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('inventory', this)">
+      <span>Vitamin &amp; Supplement Inventory</span>
+      <span class="pill-count" id="navCountInventory">0</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('appointments', this)">
+      <span>Clinic Appointments</span>
+      <span class="pill-count" id="navCountAppointments">0</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('patients', this)">
+      <span>Patients Database</span>
+      <span class="pill-count" id="navCountPatients">0</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('sales', this)">
+      <span>Sales History &amp; Receipts</span>
+      <span class="pill-count" id="navCountSales">0</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('settings', this)">
+      <span>Clinic &amp; Receipt Settings</span>
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-container">
+
+    <!-- KPI Overview Strip -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Today's Clinic &amp; Shop Revenue</div>
+        <div class="kpi-value" id="kpiTodayRevenue">GHC 0.00</div>
+        <div class="kpi-sub" id="kpiTodaySalesCount">0 transactions today</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Inventory Stock Status</div>
+        <div class="kpi-value" id="kpiTotalProducts">0 SKUs</div>
+        <div class="kpi-sub" id="kpiLowStockAlert">0 low stock &bull; 0 expiring soon</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Upcoming Appointments</div>
+        <div class="kpi-value" id="kpiUpcomingAppts">0</div>
+        <div class="kpi-sub" id="kpiTodayAppts">0 scheduled for today</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Registered Patients</div>
+        <div class="kpi-value" id="kpiTotalPatients">0</div>
+        <div class="kpi-sub">Active clinic &amp; shop profiles</div>
+      </div>
+    </section>
+
+    <!-- 1. POS (SALES POINT + CONSULTATION BILLING + SPLIT PAYMENTS) TAB -->
+    <section id="tab-pos" class="tab-panel active">
+      <div class="pos-layout">
+        <!-- Left: Product Selector -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Clinic Shop Catalog — Vitamins &amp; Supplements</span>
+            <button class="btn btn-outline btn-sm" onclick="switchTabByName('inventory')">+ Manage Inventory</button>
+          </div>
+          <div class="filter-bar">
+            <input type="text" id="posSearch" placeholder="Search by product name, SKU, or dosage form..." oninput="renderPOSCatalog()" />
+            <select id="posCategoryFilter" onchange="renderPOSCatalog()">
+              <option value="ALL">All Categories</option>
+              <option value="Vitamins">Vitamins</option>
+              <option value="Minerals">Minerals</option>
+              <option value="Herbal & Botanicals">Herbal &amp; Botanicals</option>
+              <option value="Omega & Fish Oils">Omega &amp; Fish Oils</option>
+              <option value="Probiotics & Gut">Probiotics &amp; Gut</option>
+              <option value="Immune & Wellness">Immune &amp; Wellness</option>
+              <option value="Specialty">Specialty</option>
+            </select>
+          </div>
+          <div id="posProductGrid" class="product-grid"></div>
+        </div>
+
+        <!-- Right: Active Sale Cart, Consultation Fee & Split Payment Checkout -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Current Sale &amp; Clinic Checkout</span>
+            <button class="btn btn-danger btn-sm" onclick="clearCart()">Clear Checkout</button>
+          </div>
+
+          <input type="hidden" id="posLinkedApptId" value="" />
+
+          <div class="form-group" style="margin-bottom:0.65rem;">
+            <label for="posPatientSelect">Patient / Customer</label>
+            <select id="posPatientSelect">
+              <option value="">Walk-In Shop Customer</option>
+            </select>
+          </div>
+
+          <!-- Vitamin & Supplement Cart Lines -->
+          <div id="cartItemsContainer" class="cart-items"></div>
+
+          <!-- Consultation / Clinic Service Billing Box -->
+          <div class="pos-subbox">
+            <div class="pos-subbox-title">
+              <span>Clinic Consultation / Service Fee (Same Receipt)</span>
+              <button type="button" class="btn btn-outline btn-sm" onclick="clearConsultationFee()">Clear Fee</button>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="posConsultationType">Consultation / Service Type</label>
+                <select id="posConsultationType" onchange="renderCart()">
+                  <option value="">None (Shop Purchase Only)</option>
+                  <option value="General Clinic Consultation">General Clinic Consultation</option>
+                  <option value="Nutrition & Supplement Review">Nutrition &amp; Supplement Review</option>
+                  <option value="Follow-Up Checkup">Follow-Up Checkup</option>
+                  <option value="Wellness & Preventive Screening">Wellness &amp; Preventive Screening</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="posConsultationFee">Consultation Fee (<span class="curr-sym">GHC</span>)</label>
+                <input type="number" id="posConsultationFee" min="0" step="0.01" value="0" oninput="renderCart()" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Discount, Tax & Dosage Note -->
+          <div class="form-grid" style="margin-top:0.65rem;">
+            <div class="form-group">
+              <label for="posDiscount">Discount (<span class="curr-sym">GHC</span>)</label>
+              <input type="number" id="posDiscount" min="0" step="0.01" value="0" oninput="renderCart()" />
+            </div>
+            <div class="form-group">
+              <label for="posTaxRate">Tax / VAT (%)</label>
+              <input type="number" id="posTaxRate" min="0" max="100" step="0.1" value="0" oninput="renderCart()" />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:0.6rem;">
+            <label for="posNote">Dosage / Clinical Receipt Note</label>
+            <input type="text" id="posNote" placeholder="e.g., Take 1 capsule daily after meal" />
+          </div>
+
+          <!-- Split Payment Section -->
+          <div class="pos-subbox">
+            <div class="pos-subbox-title">
+              <span>Payment Breakdown (Single or Split Payment: MoMo / Cash / Card)</span>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addSplitPaymentRow()">+ Add Split Method</button>
+            </div>
+            <div id="splitPaymentsContainer"></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.79rem; margin-top:0.4rem; padding-top:0.4rem; border-top:1px dashed var(--border);">
+              <span>Total Tendered: <strong id="splitTotalPaidDisplay">GHC 0.00</strong></span>
+              <span id="splitBalanceStatus" style="font-weight:700; color:var(--primary-dark);">Balance: GHC 0.00</span>
+            </div>
+          </div>
+
+          <!-- Totals Summary -->
+          <div class="cart-summary">
+            <div class="summary-line">
+              <span>Supplements Subtotal</span>
+              <span id="cartSubtotal">GHC 0.00</span>
+            </div>
+            <div class="summary-line">
+              <span>Consultation / Clinic Fee</span>
+              <span id="cartConsultDisplay">GHC 0.00</span>
+            </div>
+            <div class="summary-line">
+              <span>Discount</span>
+              <span id="cartDiscountDisplay">- GHC 0.00</span>
+            </div>
+            <div class="summary-line">
+              <span>Tax</span>
+              <span id="cartTaxDisplay">GHC 0.00</span>
+            </div>
+            <div class="summary-total">
+              <span>Total Due</span>
+              <span id="cartTotalDue">GHC 0.00</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; margin-top:0.85rem; padding:0.75rem;" onclick="completeSale()">
+            Complete Sale &amp; Issue Official Receipt
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. INVENTORY TAB -->
+    <section id="tab-inventory" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="invFormTitle">Add New Vitamin / Supplement to Inventory</span>
+          <button class="btn btn-outline btn-sm" onclick="resetInventoryForm()">Reset Form</button>
+        </div>
+        <form id="inventoryForm" onsubmit="saveInventoryItem(event)">
+          <input type="hidden" id="invEditId" value="" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="invSku">SKU / Product Code *</label>
+              <input type="text" id="invSku" required placeholder="e.g., MC-VITC-1000" />
+            </div>
+            <div class="form-group">
+              <label for="invName">Product Name *</label>
+              <input type="text" id="invName" required placeholder="e.g., Vitamin C 1000mg + Zinc" />
+            </div>
+            <div class="form-group">
+              <label for="invCategory">Category *</label>
+              <select id="invCategory" required>
+                <option value="Vitamins">Vitamins</option>
+                <option value="Minerals">Minerals</option>
+                <option value="Herbal & Botanicals">Herbal &amp; Botanicals</option>
+                <option value="Omega & Fish Oils">Omega &amp; Fish Oils</option>
+                <option value="Probiotics & Gut">Probiotics &amp; Gut</option>
+                <option value="Immune & Wellness">Immune &amp; Wellness</option>
+                <option value="Specialty">Specialty</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="invFormType">Dosage Form &amp; Pack Size</label>
+              <input type="text" id="invFormType" placeholder="e.g., 60 Capsules / Bottle" />
+            </div>
+            <div class="form-group">
+              <label for="invCost">Unit Cost (<span class="curr-sym">GHC</span>) *</label>
+              <input type="number" id="invCost" min="0" step="0.01" required placeholder="0.00" />
+            </div>
+            <div class="form-group">
+              <label for="invPrice">Selling Price (<span class="curr-sym">GHC</span>) *</label>
+              <input type="number" id="invPrice" min="0" step="0.01" required placeholder="0.00" />
+            </div>
+            <div class="form-group">
+              <label for="invStock">Quantity in Stock *</label>
+              <input type="number" id="invStock" min="0" step="1" required placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label for="invReorder">Low-Stock Reorder Level *</label>
+              <input type="number" id="invReorder" min="0" step="1" required value="5" />
+            </div>
+            <div class="form-group">
+              <label for="invBatch">Batch / Lot Number</label>
+              <input type="text" id="invBatch" placeholder="e.g., LOT-2026-A" />
+            </div>
+            <div class="form-group">
+              <label for="invExpiry">Expiry Date</label>
+              <input type="date" id="invExpiry" />
+            </div>
+          </div>
+          <div style="margin-top:0.95rem; display:flex; gap:0.6rem;">
+            <button type="submit" class="btn btn-primary">Save Product</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Current Vitamin &amp; Supplement Stock</span>
+          <div class="filter-bar">
+            <input type="text" id="invSearch" placeholder="Filter inventory..." oninput="renderInventoryTable()" />
+            <select id="invStatusFilter" onchange="renderInventoryTable()">
+              <option value="ALL">All Stock Statuses</option>
+              <option value="LOW">Low or Out of Stock</option>
+              <option value="EXPIRING">Expiring within 90 Days / Expired</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="exportInventoryCSV()">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Product &amp; Form</th>
+                <th>Category</th>
+                <th class="num">Unit Cost</th>
+                <th class="num">Selling Price</th>
+                <th class="num">In Stock</th>
+                <th>Batch / Expiry</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. CLINIC APPOINTMENTS TAB -->
+    <section id="tab-appointments" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="apptFormTitle">Schedule Clinic Appointment</span>
+          <button class="btn btn-outline btn-sm" onclick="resetAppointmentForm()">Reset Form</button>
+        </div>
+        <form id="appointmentForm" onsubmit="saveAppointment(event)">
+          <input type="hidden" id="apptEditId" value="" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="apptPatientId">Patient *</label>
+              <select id="apptPatientId" required>
+                <option value="">-- Select Registered Patient --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="apptDate">Appointment Date *</label>
+              <input type="date" id="apptDate" required />
+            </div>
+            <div class="form-group">
+              <label for="apptTime">Time *</label>
+              <input type="time" id="apptTime" required />
+            </div>
+            <div class="form-group">
+              <label for="apptType">Consultation / Visit Type *</label>
+              <select id="apptType" required>
+                <option value="General Clinic Consultation">General Clinic Consultation</option>
+                <option value="Nutrition & Supplement Review">Nutrition &amp; Supplement Review</option>
+                <option value="Follow-Up Checkup">Follow-Up Checkup</option>
+                <option value="Wellness & Preventive Screening">Wellness &amp; Preventive Screening</option>
+                <option value="Supplement Refill Pickup">Supplement Refill Pickup</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="apptFee">Consultation Fee (<span class="curr-sym">GHC</span>)</label>
+              <input type="number" id="apptFee" min="0" step="0.01" value="0" placeholder="0.00" />
+            </div>
+            <div class="form-group">
+              <label for="apptClinician">Practitioner / Clinician</label>
+              <input type="text" id="apptClinician" placeholder="e.g., Mediconny / Duty Clinician" />
+            </div>
+            <div class="form-group">
+              <label for="apptStatus">Status *</label>
+              <select id="apptStatus" required>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Checked In">Checked In</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:0.75rem;">
+            <label for="apptNotes">Reason for Visit / Recommended Supplements</label>
+            <input type="text" id="apptNotes" placeholder="Clinical notes or recommended vitamins to dispense at the shop..." />
+          </div>
+          <div style="margin-top:0.95rem;">
+            <button type="submit" class="btn btn-primary">Save Appointment</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Clinic Appointment Schedule</span>
+          <div class="filter-bar">
+            <input type="text" id="apptSearch" placeholder="Search patient, notes, clinician..." oninput="renderAppointmentsTable()" />
+            <input type="date" id="apptDateFilter" onchange="renderAppointmentsTable()" />
+            <select id="apptStatusFilter" onchange="renderAppointmentsTable()">
+              <option value="ALL">All Statuses</option>
+              <option value="Scheduled">Scheduled</option>
+              <option value="Checked In">Checked In</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('apptDateFilter').value=''; renderAppointmentsTable();">Clear Date</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date &amp; Time</th>
+                <th>Patient</th>
+                <th>Visit Type</th>
+                <th class="num">Consult Fee</th>
+                <th>Clinician</th>
+                <th>Clinical / Supplement Notes</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="appointmentsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PATIENTS DATABASE TAB -->
+    <section id="tab-patients" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="patientFormTitle">Register Clinic Patient</span>
+          <button class="btn btn-outline btn-sm" onclick="resetPatientForm()">Reset Form</button>
+        </div>
+        <form id="patientForm" onsubmit="savePatient(event)">
+          <input type="hidden" id="ptEditId" value="" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="ptName">Full Name *</label>
+              <input type="text" id="ptName" required placeholder="Patient full name" />
+            </div>
+            <div class="form-group">
+              <label for="ptPhone">Phone Number *</label>
+              <input type="tel" id="ptPhone" required placeholder="e.g., +233 ..." />
+            </div>
+            <div class="form-group">
+              <label for="ptEmail">Email Address</label>
+              <input type="email" id="ptEmail" placeholder="Optional email" />
+            </div>
+            <div class="form-group">
+              <label for="ptDob">Date of Birth</label>
+              <input type="date" id="ptDob" />
+            </div>
+            <div class="form-group">
+              <label for="ptGender">Gender</label>
+              <select id="ptGender">
+                <option value="">Prefer not to say / Unspecified</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ptAllergies">Allergies / Contraindications</label>
+              <input type="text" id="ptAllergies" placeholder="e.g., Shellfish, Soy, None known" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:0.75rem;">
+            <label for="ptNotes">Medical History &amp; Ongoing Supplement Regimen</label>
+            <input type="text" id="ptNotes" placeholder="Key health goals, current prescriptions, or vitamin regimen..." />
+          </div>
+          <div style="margin-top:0.95rem;">
+            <button type="submit" class="btn btn-primary">Save Patient Record</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Patients Directory</span>
+          <div class="filter-bar">
+            <input type="text" id="ptSearch" placeholder="Search by name, ID, phone, or notes..." oninput="renderPatientsTable()" />
+            <button class="btn btn-outline btn-sm" onclick="exportPatientsCSV()">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient ID</th>
+                <th>Full Name</th>
+                <th>Phone &amp; Email</th>
+                <th>DOB / Gender</th>
+                <th>Allergies &amp; Regimen Notes</th>
+                <th class="num">Visits</th>
+                <th class="num">Total Spend</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="patientsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. SALES HISTORY TAB -->
+    <section id="tab-sales" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Clinic &amp; Shop Sales Ledger</span>
+          <div class="filter-bar">
+            <input type="text" id="salesSearch" placeholder="Search receipt #, patient, item, payment method..." oninput="renderSalesTable()" />
+            <button class="btn btn-outline btn-sm" onclick="exportSalesCSV()">Export Sales CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Receipt #</th>
+                <th>Date &amp; Time</th>
+                <th>Patient / Customer</th>
+                <th>Supplements &amp; Consultation</th>
+                <th>Payment Breakdown (Split / Single)</th>
+                <th class="num">Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="salesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. CLINIC & RECEIPT SETTINGS TAB -->
+    <section id="tab-settings" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Clinic Profile &amp; Official Receipt Header Configuration</span>
+        </div>
+        <form id="settingsForm" onsubmit="saveClinicSettings(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="setClinicName">Clinic &amp; Shop Name *</label>
+              <input type="text" id="setClinicName" required placeholder="Mediconny Clinic & Supplement Shop" />
+            </div>
+            <div class="form-group">
+              <label for="setAddress">Clinic Location / Address</label>
+              <input type="text" id="setAddress" placeholder="Street address, town/city, region" />
+            </div>
+            <div class="form-group">
+              <label for="setPhone">Clinic Contact Phone</label>
+              <input type="text" id="setPhone" placeholder="e.g., +233 ..." />
+            </div>
+            <div class="form-group">
+              <label for="setTaxId">Tax / TIN / Facility Registration ID</label>
+              <input type="text" id="setTaxId" placeholder="Optional TIN or Registration Number" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:0.75rem;">
+            <label for="setReceiptFooter">Printed Receipt Footer Message</label>
+            <input type="text" id="setReceiptFooter" placeholder="Thank you for visiting Mediconny Clinic & Shop!" />
+          </div>
+          <div style="margin-top:1rem;">
+            <button type="submit" class="btn btn-primary">Save Clinic &amp; Receipt Settings</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Receipt Modal -->
+  <div id="receiptModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="card-header no-print">
+        <span class="card-title">Official Clinic &amp; Shop Receipt</span>
+        <button class="btn btn-outline btn-sm" onclick="closeReceiptModal()">Close</button>
+      </div>
+      <div id="receiptContent" class="receipt-box"></div>
+      <div class="no-print" style="display:flex; gap:0.6rem; justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="closeReceiptModal()">Done</button>
+        <button class="btn btn-primary" onclick="window.print()">Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "mediconny_clinic_fullstack_v2";
+    let isServerConnected = false;
+
+    let state = {
+      currency: "GHC",
+      settings: {
+        clinicName: "Mediconny Clinic & Supplement Shop",
+        address: "",
+        phone: "",
+        taxId: "",
+        receiptFooter: "Thank you for visiting Mediconny Clinic & Shop!"
+      },
+      inventory: [],
+      patients: [],
+      appointments: [],
+      sales: [],
+      cart: [],
+      splitPayments: [
+        { method: "Mobile Money (MoMo)", amount: 0, ref: "" }
+      ]
+    };
+
+    /* ---------------- FULL-STACK NODE.JS SYNC + LOCAL FALLBACK ---------------- */
+    async function initApp() {
+      // First load local cache
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = Object.assign(state, parsed);
+          state.settings = Object.assign({}, state.settings, parsed.settings || {});
+        }
+      } catch (e) {
+        console.warn("Local storage load warning:", e);
+      }
+
+      // Attempt connection to Node.js backend (/api/state)
+      try {
+        const res = await fetch("/api/state", { cache: "no-store" });
+        if (res.ok) {
+          const serverState = await res.json();
+          isServerConnected = true;
+          state.currency = serverState.currency || state.currency || "GHC";
+          state.settings = Object.assign({}, state.settings, serverState.settings || {});
+          state.inventory = Array.isArray(serverState.inventory) ? serverState.inventory : [];
+          state.patients = Array.isArray(serverState.patients) ? serverState.patients : [];
+          state.appointments = Array.isArray(serverState.appointments) ? serverState.appointments : [];
+          state.sales = Array.isArray(serverState.sales) ? serverState.sales : [];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+      } catch (err) {
+        isServerConnected = false;
+      }
+
+      updateServerIndicator();
+      document.getElementById("currencySelect").value = state.currency || "GHC";
+      populateSettingsForm();
+      syncCurrencyLabels();
+      if (!Array.isArray(state.splitPayments) || state.splitPayments.length === 0) {
+        state.splitPayments = [{ method: "Mobile Money (MoMo)", amount: 0, ref: "" }];
+      }
+      refreshAllViews();
+    }
+
+    function updateServerIndicator() {
+      const dot = document.getElementById("serverDot");
+      const txt = document.getElementById("serverStatusText");
+      if (isServerConnected) {
+        dot.classList.remove("local");
+        txt.textContent = "Node.js Server Active";
+      } else {
+        dot.classList.add("local");
+        txt.textContent = "Standalone Browser Mode";
+      }
+    }
+
+    async function persistState(apiEndpoint, method, payload) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error("Failed local save:", e);
+      }
+
+      if (isServerConnected && apiEndpoint) {
+        try {
+          const resp = await fetch(apiEndpoint, {
+            method: method || "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload ? JSON.stringify(payload) : undefined
+          });
+          if (!resp.ok) {
+            // Server rejected the change: tell the user and re-sync from the server copy.
+            let msg = "Server rejected the change (" + resp.status + ").";
+            try { msg = (await resp.json()).error || msg; } catch (e) {}
+            alert(msg);
+            const fresh = await fetch("/api/state", { cache: "no-store" });
+            if (fresh.ok) {
+              const sv = await fresh.json();
+              state.inventory = sv.inventory; state.patients = sv.patients;
+              state.appointments = sv.appointments; state.sales = sv.sales;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            }
+          }
+        } catch (err) {
+          console.warn("API sync fallback to local:", err);
+        }
+      }
+      refreshAllViews();
+    }
+
+    function nextSeq(prefix, existing, width) {
+      const max = existing.reduce((m, v) => {
+        const n = parseInt(String(v || "").replace(prefix, ""), 10);
+        return isNaN(n) ? m : Math.max(m, n);
+      }, 0);
+      return prefix + String(max + 1).padStart(width, "0");
+    }
+
+    function fmtMoney(amount) {
+      const num = Number(amount) || 0;
+      return `${state.currency} ${num.toFixed(2)}`;
+    }
+
+    function updateCurrency(curr) {
+      state.currency = curr;
+      syncCurrencyLabels();
+      persistState("/api/settings", "PUT", { currency: state.currency, settings: state.settings });
+    }
+
+    function syncCurrencyLabels() {
+      document.querySelectorAll(".curr-sym").forEach(el => {
+        el.textContent = state.currency;
+      });
+    }
+
+    function populateSettingsForm() {
+      const s = state.settings || {};
+      document.getElementById("setClinicName").value = s.clinicName || "Mediconny Clinic & Supplement Shop";
+      document.getElementById("setAddress").value = s.address || "";
+      document.getElementById("setPhone").value = s.phone || "";
+      document.getElementById("setTaxId").value = s.taxId || "";
+      document.getElementById("setReceiptFooter").value = s.receiptFooter || "Thank you for visiting Mediconny Clinic & Shop!";
+      document.getElementById("headerClinicTitle").textContent = s.clinicName || "Mediconny Clinic & Supplement Shop";
+    }
+
+    function saveClinicSettings(e) {
+      e.preventDefault();
+      state.settings = {
+        clinicName: document.getElementById("setClinicName").value.trim() || "Mediconny Clinic & Supplement Shop",
+        address: document.getElementById("setAddress").value.trim(),
+        phone: document.getElementById("setPhone").value.trim(),
+        taxId: document.getElementById("setTaxId").value.trim(),
+        receiptFooter: document.getElementById("setReceiptFooter").value.trim() || "Thank you for visiting Mediconny Clinic & Shop!"
+      };
+      document.getElementById("headerClinicTitle").textContent = state.settings.clinicName;
+      persistState("/api/settings", "PUT", { currency: state.currency, settings: state.settings });
+      alert("Clinic profile and receipt header settings saved.");
+    }
+
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
+      const target = document.getElementById("tab-" + tabId);
+      if (target) target.classList.add("active");
+      if (btnEl) btnEl.classList.add("active");
+    }
+
+    function switchTabByName(tabId) {
+      const tabs = document.querySelectorAll(".nav-tab");
+      const map = { pos: 0, inventory: 1, appointments: 2, patients: 3, sales: 4, settings: 5 };
+      switchTab(tabId, tabs[map[tabId]]);
+    }
+
+    function refreshAllViews() {
+      updateKPIs();
+      populatePatientDropdowns();
+      renderPOSCatalog();
+      renderCart();
+      renderInventoryTable();
+      renderAppointmentsTable();
+      renderPatientsTable();
+      renderSalesTable();
+    }
+
+    function updateKPIs() {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todaySales = state.sales.filter(s => (s.timestamp || "").slice(0, 10) === todayStr);
+      const todayRev = todaySales.reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+
+      document.getElementById("kpiTodayRevenue").textContent = fmtMoney(todayRev);
+      document.getElementById("kpiTodaySalesCount").textContent = `${todaySales.length} transaction(s) today`;
+
+      const lowStockCount = state.inventory.filter(i => Number(i.stock) <= Number(i.reorder)).length;
+      const expiringCount = state.inventory.filter(i => isExpiringSoon(i.expiry)).length;
+      document.getElementById("kpiTotalProducts").textContent = `${state.inventory.length} SKUs`;
+      document.getElementById("kpiLowStockAlert").textContent = `${lowStockCount} low stock • ${expiringCount} expiring soon`;
+
+      const upcomingAppts = state.appointments.filter(a => a.status === "Scheduled" || a.status === "Checked In");
+      const todayAppts = upcomingAppts.filter(a => a.date === todayStr);
+      document.getElementById("kpiUpcomingAppts").textContent = String(upcomingAppts.length);
+      document.getElementById("kpiTodayAppts").textContent = `${todayAppts.length} scheduled for today`;
+
+      document.getElementById("kpiTotalPatients").textContent = String(state.patients.length);
+
+      document.getElementById("navCountInventory").textContent = String(state.inventory.length);
+      document.getElementById("navCountAppointments").textContent = String(upcomingAppts.length);
+      document.getElementById("navCountPatients").textContent = String(state.patients.length);
+      document.getElementById("navCountSales").textContent = String(state.sales.length);
+    }
+
+    function isExpiringSoon(expiryDateStr) {
+      if (!expiryDateStr) return false;
+      const exp = new Date(expiryDateStr);
+      const now = new Date();
+      const diffDays = (exp - now) / (1000 * 60 * 60 * 24);
+      return diffDays <= 90;
+    }
+
+    function populatePatientDropdowns() {
+      const posSel = document.getElementById("posPatientSelect");
+      const apptSel = document.getElementById("apptPatientId");
+      const currentPosVal = posSel.value;
+      const currentApptVal = apptSel.value;
+
+      posSel.innerHTML = `<option value="">Walk-In Shop Customer</option>`;
+      apptSel.innerHTML = `<option value="">-- Select Registered Patient --</option>`;
+
+      state.patients.forEach(pt => {
+        const label = `${pt.name} (${pt.code} • ${pt.phone})`;
+        posSel.innerHTML += `<option value="${pt.id}">${escapeHtml(label)}</option>`;
+        apptSel.innerHTML += `<option value="${pt.id}">${escapeHtml(label)}</option>`;
+      });
+
+      posSel.value = currentPosVal;
+      apptSel.value = currentApptVal;
+    }
+
+    /* ---------------- POS, CONSULTATION FEE & SPLIT PAYMENTS ---------------- */
+    function renderPOSCatalog() {
+      const q = (document.getElementById("posSearch").value || "").toLowerCase().trim();
+      const cat = document.getElementById("posCategoryFilter").value;
+      const grid = document.getElementById("posProductGrid");
+
+      const filtered = state.inventory.filter(item => {
+        const matchesCat = cat === "ALL" || item.category === cat;
+        const matchesQ = !q ||
+          item.name.toLowerCase().includes(q) ||
+          item.sku.toLowerCase().includes(q) ||
+          (item.formType || "").toLowerCase().includes(q);
+        return matchesCat && matchesQ;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            No vitamin or supplement products in catalog yet. Click <strong>+ Manage Inventory</strong> to add stock items.
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const out = Number(item.stock) <= 0;
+        const low = !out && Number(item.stock) <= Number(item.reorder);
+        const badgeClass = out ? "badge-danger" : (low ? "badge-warn" : "badge-success");
+        const badgeText = out ? "Out of Stock" : `${item.stock} in stock`;
+
+        return `
+          <div class="product-tile ${out ? 'out-of-stock' : ''}" onclick="${out ? '' : `addToCart('${item.id}')`}">
+            <div>
+              <div class="tile-cat">${escapeHtml(item.category)} &bull; ${escapeHtml(item.sku)}</div>
+              <div class="tile-name">${escapeHtml(item.name)}</div>
+              <div class="tile-meta">${escapeHtml(item.formType || 'Standard Pack')}</div>
+            </div>
+            <div class="tile-footer">
+              <span class="tile-price">${fmtMoney(item.price)}</span>
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function addToCart(productId) {
+      const product = state.inventory.find(i => i.id === productId);
+      if (!product || Number(product.stock) <= 0) return;
+
+      const existing = state.cart.find(c => c.productId === productId);
+      if (existing) {
+        if (existing.qty + 1 > Number(product.stock)) {
+          alert(`Only ${product.stock} unit(s) of ${product.name} available in stock.`);
+          return;
+        }
+        existing.qty += 1;
+      } else {
+        state.cart.push({
+          productId: product.id,
+          sku: product.sku,
+          name: product.name,
+          price: Number(product.price),
+          qty: 1
+        });
+      }
+      syncDefaultPaymentAmount();
+      renderCart();
+    }
+
+    function changeCartQty(productId, delta) {
+      const idx = state.cart.findIndex(c => c.productId === productId);
+      if (idx === -1) return;
+      const product = state.inventory.find(i => i.id === productId);
+      const maxStock = product ? Number(product.stock) : 9999;
+
+      const newQty = state.cart[idx].qty + delta;
+      if (newQty <= 0) {
+        state.cart.splice(idx, 1);
+      } else if (newQty > maxStock) {
+        alert(`Cannot exceed available stock (${maxStock}).`);
+      } else {
+        state.cart[idx].qty = newQty;
+      }
+      syncDefaultPaymentAmount();
+      renderCart();
+    }
+
+    function clearConsultationFee() {
+      document.getElementById("posConsultationType").value = "";
+      document.getElementById("posConsultationFee").value = "0";
+      document.getElementById("posLinkedApptId").value = "";
+      syncDefaultPaymentAmount();
+      renderCart();
+    }
+
+    function clearCart() {
+      state.cart = [];
+      document.getElementById("posDiscount").value = "0";
+      document.getElementById("posNote").value = "";
+      document.getElementById("posConsultationType").value = "";
+      document.getElementById("posConsultationFee").value = "0";
+      document.getElementById("posLinkedApptId").value = "";
+      state.splitPayments = [{ method: "Mobile Money (MoMo)", amount: 0, ref: "" }];
+      renderCart();
+    }
+
+    function calculateCheckoutTotals() {
+      const subtotal = state.cart.reduce((sum, c) => sum + c.price * c.qty, 0);
+      const consultFee = Math.max(0, Number(document.getElementById("posConsultationFee").value) || 0);
+      const gross = subtotal + consultFee;
+      const discount = Math.min(gross, Math.max(0, Number(document.getElementById("posDiscount").value) || 0));
+      const taxRate = Math.max(0, Number(document.getElementById("posTaxRate").value) || 0);
+      const taxable = Math.max(0, gross - discount);
+      const tax = taxable * (taxRate / 100);
+      const total = Number((taxable + tax).toFixed(2));
+      return { subtotal, consultFee, discount, taxRate, tax, total };
+    }
+
+    function syncDefaultPaymentAmount() {
+      const { total } = calculateCheckoutTotals();
+      if (state.splitPayments.length === 1) {
+        state.splitPayments[0].amount = total;
+      }
+    }
+
+    function addSplitPaymentRow() {
+      const { total } = calculateCheckoutTotals();
+      const paidSoFar = state.splitPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const remaining = Math.max(0, Number((total - paidSoFar).toFixed(2)));
+      state.splitPayments.push({
+        method: "Cash",
+        amount: remaining,
+        ref: ""
+      });
+      renderSplitPayments();
+    }
+
+    function removeSplitPaymentRow(idx) {
+      if (state.splitPayments.length <= 1) return;
+      state.splitPayments.splice(idx, 1);
+      renderSplitPayments();
+    }
+
+    function updateSplitRow(idx, field, val) {
+      if (!state.splitPayments[idx]) return;
+      if (field === "amount") {
+        state.splitPayments[idx].amount = Math.max(0, Number(val) || 0);
+      } else {
+        state.splitPayments[idx][field] = val;
+      }
+      updateSplitSummaryLabels();
+    }
+
+    function renderSplitPayments() {
+      const container = document.getElementById("splitPaymentsContainer");
+      const methods = [
+        "Mobile Money (MoMo)",
+        "Cash",
+        "Card / POS Terminal",
+        "Bank Transfer",
+        "Clinic Account"
+      ];
+
+      container.innerHTML = state.splitPayments.map((p, idx) => `
+        <div class="split-row">
+          <select onchange="updateSplitRow(${idx}, 'method', this.value)">
+            ${methods.map(m => `<option value="${m}" ${p.method === m ? 'selected' : ''}>${m}</option>`).join("")}
+          </select>
+          <input type="number" min="0" step="0.01" value="${p.amount}" placeholder="Amount" oninput="updateSplitRow(${idx}, 'amount', this.value)" />
+          <input type="text" value="${escapeHtml(p.ref || '')}" placeholder="Ref / MoMo TX ID" oninput="updateSplitRow(${idx}, 'ref', this.value)" />
+          ${state.splitPayments.length > 1
+            ? `<button type="button" class="btn btn-danger btn-sm" onclick="removeSplitPaymentRow(${idx})">&times;</button>`
+            : `<span></span>`}
+        </div>
+      `).join("");
+
+      updateSplitSummaryLabels();
+    }
+
+    function updateSplitSummaryLabels() {
+      const { total } = calculateCheckoutTotals();
+      const totalPaid = state.splitPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const diff = Number((totalPaid - total).toFixed(2));
+
+      document.getElementById("splitTotalPaidDisplay").textContent = fmtMoney(totalPaid);
+      const statusEl = document.getElementById("splitBalanceStatus");
+
+      if (Math.abs(diff) < 0.01) {
+        statusEl.textContent = "Exact Amount Covered";
+        statusEl.style.color = "var(--success)";
+      } else if (diff > 0) {
+        statusEl.textContent = `Change Due: ${fmtMoney(diff)}`;
+        statusEl.style.color = "var(--primary-dark)";
+      } else {
+        statusEl.textContent = `Balance Remaining: ${fmtMoney(Math.abs(diff))}`;
+        statusEl.style.color = "var(--danger)";
+      }
+    }
+
+    function renderCart() {
+      const container = document.getElementById("cartItemsContainer");
+      if (state.cart.length === 0) {
+        container.innerHTML = `<div class="empty-state">No shop items in cart. Click a vitamin/supplement tile or enter a Consultation Fee below.</div>`;
+      } else {
+        container.innerHTML = state.cart.map(c => `
+          <div class="cart-row">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(c.name)}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(c.sku)} &bull; ${fmtMoney(c.price)} each</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <div class="qty-controls">
+                <button class="qty-btn" onclick="changeCartQty('${c.productId}', -1)">-</button>
+                <span style="min-width:20px; text-align:center; font-weight:700;">${c.qty}</span>
+                <button class="qty-btn" onclick="changeCartQty('${c.productId}', 1)">+</button>
+              </div>
+              <div style="font-weight:700; min-width:75px; text-align:right;">
+                ${fmtMoney(c.price * c.qty)}
+              </div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      const { subtotal, consultFee, discount, tax, total } = calculateCheckoutTotals();
+      if (state.splitPayments.length === 1) {
+        state.splitPayments[0].amount = total;
+      }
+
+      document.getElementById("cartSubtotal").textContent = fmtMoney(subtotal);
+      document.getElementById("cartConsultDisplay").textContent = fmtMoney(consultFee);
+      document.getElementById("cartDiscountDisplay").textContent = `- ${fmtMoney(discount)}`;
+      document.getElementById("cartTaxDisplay").textContent = fmtMoney(tax);
+      document.getElementById("cartTotalDue").textContent = fmtMoney(total);
+
+      renderSplitPayments();
+    }
+
+    async function completeSale() {
+      const { subtotal, consultFee, discount, tax, total } = calculateCheckoutTotals();
+      const consultType = document.getElementById("posConsultationType").value;
+
+      if (state.cart.length === 0 && consultFee <= 0) {
+        alert("Please add at least one vitamin/supplement item or enter a consultation fee before completing checkout.");
+        return;
+      }
+
+      for (const line of state.cart) {
+        const prod = state.inventory.find(i => i.id === line.productId);
+        if (!prod || Number(prod.stock) < line.qty) {
+          alert(`Insufficient stock for ${line.name}.`);
+          return;
+        }
+      }
+
+      const activePayments = state.splitPayments
+        .filter(p => Number(p.amount) > 0)
+        .map(p => ({
+          method: p.method,
+          amount: Number(p.amount),
+          ref: (p.ref || "").trim()
+        }));
+
+      const totalPaid = activePayments.reduce((s, p) => s + p.amount, 0);
+      if (total > 0 && totalPaid + 0.01 < total) {
+        alert(`Total tendered (${fmtMoney(totalPaid)}) is less than Total Due (${fmtMoney(total)}). Please adjust the split payment amounts.`);
+        return;
+      }
+
+      // Deduct inventory locally
+      state.cart.forEach(line => {
+        const prod = state.inventory.find(i => i.id === line.productId);
+        if (prod) prod.stock = Number(prod.stock) - line.qty;
+      });
+
+      const patientId = document.getElementById("posPatientSelect").value;
+      const pt = state.patients.find(p => p.id === patientId);
+      const linkedApptId = document.getElementById("posLinkedApptId").value;
+      const note = document.getElementById("posNote").value.trim();
+
+      const paymentSummary = activePayments.length > 0
+        ? activePayments.map(p => `${p.method}: ${fmtMoney(p.amount)}${p.ref ? ` (${p.ref})` : ''}`).join(" + ")
+        : `Cash: ${fmtMoney(total)}`;
+
+      const saleRecord = {
+        id: "SALE-" + Date.now(),
+        receiptNo: nextSeq("MC-RCP-", state.sales.map(s => s.receiptNo), 4),
+        timestamp: new Date().toISOString(),
+        patientId: pt ? pt.id : "",
+        patientName: pt ? `${pt.name} (${pt.code})` : "Walk-In Customer",
+        appointmentId: linkedApptId || "",
+        items: state.cart.map(c => ({ ...c })),
+        subtotal,
+        consultationType: consultFee > 0 ? (consultType || "Clinic Consultation") : "",
+        consultationFee: consultFee,
+        discount,
+        tax,
+        total,
+        payments: activePayments,
+        totalPaid,
+        changeDue: Math.max(0, Number((totalPaid - total).toFixed(2))),
+        paymentMethod: paymentSummary,
+        note
+      };
+
+      if (linkedApptId) {
+        const appt = state.appointments.find(a => a.id === linkedApptId);
+        if (appt) appt.status = "Completed";
+      }
+
+      state.sales.unshift(saleRecord);
+      clearCart();
+      await persistState("/api/sales", "POST", saleRecord);
+      showReceipt(saleRecord.id);
+    }
+
+    function showReceipt(saleId) {
+      const s = state.sales.find(x => x.id === saleId);
+      if (!s) return;
+      const cfg = state.settings || {};
+      const dt = new Date(s.timestamp).toLocaleString();
+
+      const headerLines = [
+        "==========================================",
+        `   ${(cfg.clinicName || "MEDICONNY CLINIC & SHOP").toUpperCase()}`,
+        cfg.address ? `   ${cfg.address}` : "",
+        cfg.phone ? `   Tel: ${cfg.phone}` : "",
+        cfg.taxId ? `   TIN / Reg: ${cfg.taxId}` : "",
+        "==========================================",
+        `Receipt #: ${s.receiptNo}`,
+        `Date:      ${dt}`,
+        `Patient:   ${s.patientName}`,
+        "------------------------------------------"
+      ].filter(Boolean);
+
+      const itemLines = [];
+      if (s.consultationFee && Number(s.consultationFee) > 0) {
+        itemLines.push(`${s.consultationType || "Clinic Consultation Fee"}
+  1 x ${fmtMoney(s.consultationFee)} = ${fmtMoney(s.consultationFee)}`);
+      }
+      (s.items || []).forEach(i => {
+        itemLines.push(`${i.name} (${i.sku})
+  ${i.qty} x ${fmtMoney(i.price)} = ${fmtMoney(i.qty * i.price)}`);
+      });
+
+      const paymentLines = (Array.isArray(s.payments) && s.payments.length > 0)
+        ? s.payments.map(p => `  • ${p.method}: ${fmtMoney(p.amount)}${p.ref ? ` [Ref: ${p.ref}]` : ''}`).join("\n")
+        : `  • ${s.paymentMethod}`;
+
+      const footerLines = [
+        "------------------------------------------",
+        `Supplements Subtotal: ${fmtMoney(s.subtotal || 0)}`,
+        s.consultationFee > 0 ? `Consultation Fee:     ${fmtMoney(s.consultationFee)}` : "",
+        `Discount:            -${fmtMoney(s.discount || 0)}`,
+        `Tax:                  ${fmtMoney(s.tax || 0)}`,
+        `TOTAL DUE:            ${fmtMoney(s.total || 0)}`,
+        "------------------------------------------",
+        "PAYMENT BREAKDOWN:",
+        paymentLines,
+        `Total Tendered:       ${fmtMoney(s.totalPaid || s.total || 0)}`,
+        s.changeDue > 0 ? `Change Due:           ${fmtMoney(s.changeDue)}` : "",
+        s.note ? `------------------------------------------
+Note: ${s.note}` : "",
+        "==========================================",
+        `  ${cfg.receiptFooter || "Thank you for visiting Mediconny!"}`
+      ].filter(Boolean);
+
+      document.getElementById("receiptContent").textContent =
+        headerLines.concat(itemLines).concat(footerLines).join("\n");
+      document.getElementById("receiptModal").classList.add("open");
+    }
+
+    function closeReceiptModal() {
+      document.getElementById("receiptModal").classList.remove("open");
+    }
+
+    /* ---------------- INVENTORY ---------------- */
+    function saveInventoryItem(e) {
+      e.preventDefault();
+      const editId = document.getElementById("invEditId").value;
+      const itemData = {
+        id: editId || ("INV-" + Date.now()),
+        sku: document.getElementById("invSku").value.trim(),
+        name: document.getElementById("invName").value.trim(),
+        category: document.getElementById("invCategory").value,
+        formType: document.getElementById("invFormType").value.trim(),
+        cost: Number(document.getElementById("invCost").value) || 0,
+        price: Number(document.getElementById("invPrice").value) || 0,
+        stock: Number(document.getElementById("invStock").value) || 0,
+        reorder: Number(document.getElementById("invReorder").value) || 0,
+        batch: document.getElementById("invBatch").value.trim(),
+        expiry: document.getElementById("invExpiry").value
+      };
+
+      if (editId) {
+        const idx = state.inventory.findIndex(x => x.id === editId);
+        if (idx !== -1) state.inventory[idx] = itemData;
+      } else {
+        state.inventory.push(itemData);
+      }
+
+      resetInventoryForm();
+      persistState("/api/inventory", "POST", itemData);
+    }
+
+    function editInventoryItem(id) {
+      const item = state.inventory.find(x => x.id === id);
+      if (!item) return;
+      document.getElementById("invEditId").value = item.id;
+      document.getElementById("invSku").value = item.sku;
+      document.getElementById("invName").value = item.name;
+      document.getElementById("invCategory").value = item.category;
+      document.getElementById("invFormType").value = item.formType || "";
+      document.getElementById("invCost").value = item.cost;
+      document.getElementById("invPrice").value = item.price;
+      document.getElementById("invStock").value = item.stock;
+      document.getElementById("invReorder").value = item.reorder;
+      document.getElementById("invBatch").value = item.batch || "";
+      document.getElementById("invExpiry").value = item.expiry || "";
+      document.getElementById("invFormTitle").textContent = "Edit Inventory Product";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function adjustStockPrompt(id) {
+      const item = state.inventory.find(x => x.id === id);
+      if (!item) return;
+      const input = prompt(`Restock / Adjust quantity for ${item.name} (Current: ${item.stock}). Enter new total stock quantity:`, String(item.stock));
+      if (input === null) return;
+      const parsed = parseInt(input, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        alert("Please enter a valid non-negative integer.");
+        return;
+      }
+      item.stock = parsed;
+      persistState(`/api/inventory/${encodeURIComponent(id)}`, "PATCH", { stock: parsed });
+    }
+
+    function deleteInventoryItem(id) {
+      if (!confirm("Remove this product from inventory?")) return;
+      state.inventory = state.inventory.filter(x => x.id !== id);
+      persistState(`/api/inventory/${encodeURIComponent(id)}`, "DELETE");
+    }
+
+    function resetInventoryForm() {
+      document.getElementById("inventoryForm").reset();
+      document.getElementById("invEditId").value = "";
+      document.getElementById("invFormTitle").textContent = "Add New Vitamin / Supplement to Inventory";
+    }
+
+    function renderInventoryTable() {
+      const q = (document.getElementById("invSearch").value || "").toLowerCase().trim();
+      const statusFilter = document.getElementById("invStatusFilter").value;
+      const tbody = document.getElementById("inventoryTableBody");
+
+      const list = state.inventory.filter(item => {
+        const matchesQ = !q ||
+          item.name.toLowerCase().includes(q) ||
+          item.sku.toLowerCase().includes(q) ||
+          item.category.toLowerCase().includes(q) ||
+          (item.batch || "").toLowerCase().includes(q);
+        if (!matchesQ) return false;
+        if (statusFilter === "LOW") return Number(item.stock) <= Number(item.reorder);
+        if (statusFilter === "EXPIRING") return isExpiringSoon(item.expiry);
+        return true;
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state">No inventory items recorded yet. Use the form above to add vitamins and supplements.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => {
+        const out = Number(item.stock) <= 0;
+        const low = !out && Number(item.stock) <= Number(item.reorder);
+        const expSoon = isExpiringSoon(item.expiry);
+
+        let statusHtml = `<span class="badge badge-success">In Stock</span>`;
+        if (out) statusHtml = `<span class="badge badge-danger">Out of Stock</span>`;
+        else if (low) statusHtml = `<span class="badge badge-warn">Low Stock (&le;${item.reorder})</span>`;
+        if (expSoon) statusHtml += ` <span class="badge badge-danger">Expiring/Expired</span>`;
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(item.sku)}</strong></td>
+            <td>
+              <div style="font-weight:700;">${escapeHtml(item.name)}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(item.formType || '')}</div>
+            </td>
+            <td>${escapeHtml(item.category)}</td>
+            <td class="num">${fmtMoney(item.cost)}</td>
+            <td class="num"><strong>${fmtMoney(item.price)}</strong></td>
+            <td class="num"><strong>${item.stock}</strong></td>
+            <td>
+              <div>${escapeHtml(item.batch || '-')}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(item.expiry || 'No exp')}</div>
+            </td>
+            <td>${statusHtml}</td>
+            <td>
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="adjustStockPrompt('${item.id}')">Stock</button>
+                <button class="btn btn-outline btn-sm" onclick="editInventoryItem('${item.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteInventoryItem('${item.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    /* ---------------- APPOINTMENTS ---------------- */
+    function saveAppointment(e) {
+      e.preventDefault();
+      const editId = document.getElementById("apptEditId").value;
+      const patientId = document.getElementById("apptPatientId").value;
+      const pt = state.patients.find(p => p.id === patientId);
+
+      const apptData = {
+        id: editId || ("APPT-" + Date.now()),
+        patientId,
+        patientName: pt ? `${pt.name} (${pt.code})` : "Unknown Patient",
+        date: document.getElementById("apptDate").value,
+        time: document.getElementById("apptTime").value,
+        type: document.getElementById("apptType").value,
+        consultationFee: Number(document.getElementById("apptFee").value) || 0,
+        clinician: document.getElementById("apptClinician").value.trim() || "Mediconny Clinic",
+        status: document.getElementById("apptStatus").value,
+        notes: document.getElementById("apptNotes").value.trim()
+      };
+
+      if (editId) {
+        const idx = state.appointments.findIndex(x => x.id === editId);
+        if (idx !== -1) state.appointments[idx] = apptData;
+      } else {
+        state.appointments.push(apptData);
+      }
+
+      state.appointments.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+      resetAppointmentForm();
+      persistState("/api/appointments", "POST", apptData);
+    }
+
+    function editAppointment(id) {
+      const a = state.appointments.find(x => x.id === id);
+      if (!a) return;
+      document.getElementById("apptEditId").value = a.id;
+      document.getElementById("apptPatientId").value = a.patientId;
+      document.getElementById("apptDate").value = a.date;
+      document.getElementById("apptTime").value = a.time;
+      document.getElementById("apptType").value = a.type;
+      document.getElementById("apptFee").value = a.consultationFee || 0;
+      document.getElementById("apptClinician").value = a.clinician;
+      document.getElementById("apptStatus").value = a.status;
+      document.getElementById("apptNotes").value = a.notes || "";
+      document.getElementById("apptFormTitle").textContent = "Edit Clinic Appointment";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function sendApptToPOS(id) {
+      const a = state.appointments.find(x => x.id === id);
+      if (!a) return;
+      document.getElementById("posLinkedApptId").value = a.id;
+      document.getElementById("posPatientSelect").value = a.patientId || "";
+      document.getElementById("posConsultationType").value = a.type || "General Clinic Consultation";
+      document.getElementById("posConsultationFee").value = Number(a.consultationFee) || 0;
+      if (a.notes) {
+        document.getElementById("posNote").value = a.notes;
+      }
+      syncDefaultPaymentAmount();
+      renderCart();
+      switchTabByName("pos");
+    }
+
+    function deleteAppointment(id) {
+      if (!confirm("Delete this appointment record?")) return;
+      state.appointments = state.appointments.filter(x => x.id !== id);
+      persistState(`/api/appointments/${encodeURIComponent(id)}`, "DELETE");
+    }
+
+    function resetAppointmentForm() {
+      document.getElementById("appointmentForm").reset();
+      document.getElementById("apptEditId").value = "";
+      document.getElementById("apptFormTitle").textContent = "Schedule Clinic Appointment";
+    }
+
+    function renderAppointmentsTable() {
+      const q = (document.getElementById("apptSearch").value || "").toLowerCase().trim();
+      const dateF = document.getElementById("apptDateFilter").value;
+      const statusF = document.getElementById("apptStatusFilter").value;
+      const tbody = document.getElementById("appointmentsTableBody");
+
+      const list = state.appointments.filter(a => {
+        if (dateF && a.date !== dateF) return false;
+        if (statusF !== "ALL" && a.status !== statusF) return false;
+        if (q) {
+          const hay = `${a.patientName} ${a.type} ${a.clinician} ${a.notes}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No clinic appointments found. Register a patient and schedule an appointment above.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(a => {
+        let badge = "badge-neutral";
+        if (a.status === "Scheduled") badge = "badge-warn";
+        else if (a.status === "Checked In") badge = "badge-success";
+        else if (a.status === "Completed") badge = "badge-success";
+        else if (a.status === "Cancelled") badge = "badge-danger";
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(a.date)}</strong> at ${escapeHtml(a.time)}</td>
+            <td><strong>${escapeHtml(a.patientName)}</strong></td>
+            <td>${escapeHtml(a.type)}</td>
+            <td class="num">${fmtMoney(a.consultationFee || 0)}</td>
+            <td>${escapeHtml(a.clinician)}</td>
+            <td>${escapeHtml(a.notes || '-')}</td>
+            <td><span class="badge ${badge}">${escapeHtml(a.status)}</span></td>
+            <td>
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="sendApptToPOS('${a.id}')">Bill at POS</button>
+                <button class="btn btn-outline btn-sm" onclick="editAppointment('${a.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteAppointment('${a.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    /* ---------------- PATIENTS DATABASE ---------------- */
+    function savePatient(e) {
+      e.preventDefault();
+      const editId = document.getElementById("ptEditId").value;
+      const existing = editId ? state.patients.find(p => p.id === editId) : null;
+
+      const ptData = {
+        id: editId || ("PT-" + Date.now()),
+        code: existing ? existing.code : nextSeq("MC-PT-", state.patients.map(p => p.code), 3),
+        name: document.getElementById("ptName").value.trim(),
+        phone: document.getElementById("ptPhone").value.trim(),
+        email: document.getElementById("ptEmail").value.trim(),
+        dob: document.getElementById("ptDob").value,
+        gender: document.getElementById("ptGender").value,
+        allergies: document.getElementById("ptAllergies").value.trim(),
+        notes: document.getElementById("ptNotes").value.trim()
+      };
+
+      if (editId) {
+        const idx = state.patients.findIndex(p => p.id === editId);
+        if (idx !== -1) state.patients[idx] = ptData;
+      } else {
+        state.patients.push(ptData);
+      }
+
+      resetPatientForm();
+      persistState("/api/patients", "POST", ptData);
+    }
+
+    function editPatient(id) {
+      const p = state.patients.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById("ptEditId").value = p.id;
+      document.getElementById("ptName").value = p.name;
+      document.getElementById("ptPhone").value = p.phone;
+      document.getElementById("ptEmail").value = p.email || "";
+      document.getElementById("ptDob").value = p.dob || "";
+      document.getElementById("ptGender").value = p.gender || "";
+      document.getElementById("ptAllergies").value = p.allergies || "";
+      document.getElementById("ptNotes").value = p.notes || "";
+      document.getElementById("patientFormTitle").textContent = `Edit Patient (${p.code})`;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deletePatient(id) {
+      if (!confirm("Delete this patient profile from the database?")) return;
+      state.patients = state.patients.filter(x => x.id !== id);
+      persistState(`/api/patients/${encodeURIComponent(id)}`, "DELETE");
+    }
+
+    function resetPatientForm() {
+      document.getElementById("patientForm").reset();
+      document.getElementById("ptEditId").value = "";
+      document.getElementById("patientFormTitle").textContent = "Register Clinic Patient";
+    }
+
+    function renderPatientsTable() {
+      const q = (document.getElementById("ptSearch").value || "").toLowerCase().trim();
+      const tbody = document.getElementById("patientsTableBody");
+
+      const list = state.patients.filter(p => {
+        if (!q) return true;
+        const hay = `${p.code} ${p.name} ${p.phone} ${p.email} ${p.allergies} ${p.notes}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No patients registered yet. Add a patient record using the form above.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(p => {
+        const visits = state.appointments.filter(a => a.patientId === p.id).length;
+        const spend = state.sales
+          .filter(s => s.patientId === p.id)
+          .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(p.code)}</strong></td>
+            <td><strong>${escapeHtml(p.name)}</strong></td>
+            <td>
+              <div>${escapeHtml(p.phone)}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(p.email || '')}</div>
+            </td>
+            <td>
+              <div>${escapeHtml(p.dob || '-')}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(p.gender || '')}</div>
+            </td>
+            <td>
+              ${p.allergies ? `<span class="badge badge-danger">Allergy: ${escapeHtml(p.allergies)}</span> ` : ''}
+              <span>${escapeHtml(p.notes || '-')}</span>
+            </td>
+            <td class="num">${visits}</td>
+            <td class="num"><strong>${fmtMoney(spend)}</strong></td>
+            <td>
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="editPatient('${p.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deletePatient('${p.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    /* ---------------- SALES LEDGER ---------------- */
+    function renderSalesTable() {
+      const q = (document.getElementById("salesSearch").value || "").toLowerCase().trim();
+      const tbody = document.getElementById("salesTableBody");
+
+      const list = state.sales.filter(s => {
+        if (!q) return true;
+        const itemNames = (s.items || []).map(i => i.name).join(" ");
+        const hay = `${s.receiptNo} ${s.patientName} ${s.paymentMethod} ${s.consultationType || ''} ${itemNames} ${s.note}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No sales recorded yet. Complete a checkout in the Shop POS tab to generate receipts and sales logs.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(s => {
+        const dt = new Date(s.timestamp).toLocaleString();
+        const parts = [];
+        if (s.consultationFee && Number(s.consultationFee) > 0) {
+          parts.push(`[Consult: ${s.consultationType || 'Clinic Fee'} (${fmtMoney(s.consultationFee)})]`);
+        }
+        (s.items || []).forEach(i => parts.push(`${i.qty}x ${i.name}`));
+        const itemSummary = parts.join(", ");
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(s.receiptNo)}</strong></td>
+            <td>${escapeHtml(dt)}</td>
+            <td>${escapeHtml(s.patientName)}</td>
+            <td>
+              <div>${escapeHtml(itemSummary)}</div>
+              ${s.note ? `<div style="font-size:0.75rem; color:var(--text-muted);">Note: ${escapeHtml(s.note)}</div>` : ''}
+            </td>
+            <td><span class="badge badge-neutral">${escapeHtml(s.paymentMethod)}</span></td>
+            <td class="num"><strong>${fmtMoney(s.total)}</strong></td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="showReceipt('${s.id}')">View / Print Receipt</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    /* ---------------- EXPORT / BACKUP HELPERS ---------------- */
+    function downloadCSV(filename, rows) {
+      const csvContent = rows.map(r => r.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportInventoryCSV() {
+      const rows = [["SKU", "Product Name", "Category", "Form/Pack", "Unit Cost", "Selling Price", "Stock", "Reorder Level", "Batch", "Expiry"]];
+      state.inventory.forEach(i => {
+        rows.push([i.sku, i.name, i.category, i.formType, i.cost, i.price, i.stock, i.reorder, i.batch, i.expiry]);
+      });
+      downloadCSV("mediconny_inventory.csv", rows);
+    }
+
+    function exportPatientsCSV() {
+      const rows = [["Patient ID", "Full Name", "Phone", "Email", "DOB", "Gender", "Allergies", "Clinical/Supplement Notes"]];
+      state.patients.forEach(p => {
+        rows.push([p.code, p.name, p.phone, p.email, p.dob, p.gender, p.allergies, p.notes]);
+      });
+      downloadCSV("mediconny_patients.csv", rows);
+    }
+
+    function exportSalesCSV() {
+      const rows = [["Receipt No", "Timestamp", "Patient/Customer", "Consultation Type", "Consultation Fee", "Items", "Subtotal", "Discount", "Tax", "Total", "Payment Breakdown", "Note"]];
+      state.sales.forEach(s => {
+        const items = (s.items || []).map(i => `${i.qty}x ${i.name}`).join("; ");
+        rows.push([s.receiptNo, s.timestamp, s.patientName, s.consultationType || "", s.consultationFee || 0, items, s.subtotal, s.discount, s.tax, s.total, s.paymentMethod, s.note]);
+      });
+      downloadCSV("mediconny_sales.csv", rows);
+    }
+
+    function exportAllDataJSON() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mediconny_backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importAllDataJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && typeof imported === "object") {
+            state = Object.assign(state, imported);
+            populateSettingsForm();
+            await persistState("/api/state", "PUT", state);
+            alert("Mediconny database backup restored.");
+          }
+        } catch (err) {
+          alert("Invalid backup JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function clearAllData() {
+      if (!confirm("Are you sure you want to clear all inventory, appointments, patients, and sales data?")) return;
+      state.inventory = [];
+      state.patients = [];
+      state.appointments = [];
+      state.sales = [];
+      state.cart = [];
+      await persistState("/api/state", "PUT", state);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
