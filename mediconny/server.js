@@ -29,7 +29,7 @@ const path = require("path");
 const { URL } = require("url");
 
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const JSON_DB_PATH = path.join(DATA_DIR, "mediconny_db.json");
 const HTML_FILE_PATH = path.join(__dirname, "mediconny_clinic_webapp.html");
 
@@ -91,6 +91,43 @@ try {
 }
 const storageEngine = store ? store.engine : "json";
 
+// ---------------- Authentication & roles ----------------
+const auth = require("./auth").create({ sqliteDb: store ? store.db : null, dataDir: DATA_DIR });
+const firstAdmin = auth.bootstrap();
+if (firstAdmin) {
+  console.log("============================================================");
+  console.log("First-run admin account created:");
+  console.log("  username: " + firstAdmin.username);
+  console.log("  password: " + firstAdmin.password + (firstAdmin.generated ? "  (generated - you must change it at first sign-in)" : "  (from ADMIN_PASSWORD - must be changed at first sign-in)"));
+  console.log("============================================================");
+}
+
+const ALL_ROLES = ["Admin", "Clinician", "Pharmacist/Shop"];
+const ROLE_LABELS = { Admin: "Admin", Clinician: "Doctor / Nurse", "Pharmacist/Shop": "Shop Cashier" };
+const roleLabel = r => ROLE_LABELS[r] || r;
+
+// Which roles may call which API route. Unknown routes only require a session.
+function rolesFor(method, pathname) {
+  if (pathname === "/api/state") return method === "GET" ? ALL_ROLES : ["Admin"];
+  if (pathname === "/api/settings") return ["Admin"];
+  if (pathname.startsWith("/api/inventory")) return ["Admin"];
+  if (pathname.startsWith("/api/patients")) return method === "DELETE" ? ["Admin"] : ["Admin", "Clinician"];
+  if (pathname.startsWith("/api/appointments")) return method === "DELETE" ? ["Admin"] : ["Admin", "Clinician"];
+  if (pathname.startsWith("/api/sales")) return ["Admin", "Pharmacist/Shop"];
+  return null;
+}
+
+// Trim the shared state down to what a role is allowed to see.
+function stateForRole(db, role) {
+  if (role === "Admin") return db;
+  const out = Object.assign({}, db);
+  out.inventory = db.inventory.map(i => Object.assign({}, i, { cost: 0 }));
+  if (role === "Clinician") out.sales = [];
+  if (role === "Pharmacist/Shop") out.patients = db.patients.map(p => Object.assign({}, p, { notes: "" }));
+  return out;
+}
+
+
 function readDatabase() {
   return store ? store.read() : readJsonDatabase();
 }
@@ -107,14 +144,12 @@ function nextSeq(prefix, existing, width) {
   return prefix + String(max + 1).padStart(width, "0");
 }
 
-function sendJSON(res, statusCode, payload) {
+function sendJSON(res, statusCode, payload, extraHeaders) {
   const body = JSON.stringify(payload);
-  res.writeHead(statusCode, {
+  res.writeHead(statusCode, Object.assign({
     "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
-  });
+    "Cache-Control": "no-store"
+  }, extraHeaders || {}));
   res.end(body);
 }
 
@@ -129,6 +164,9 @@ function parseBody(req) {
     });
     req.on("end", () => {
       if (!data) return resolve({});
+      if (!String(req.headers["content-type"] || "").includes("application/json")) {
+        return reject(new Error("Content-Type must be application/json"));
+      }
       try {
         resolve(JSON.parse(data));
       } catch (e) {
@@ -141,11 +179,7 @@ function parseBody(req) {
 
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
-    });
+    res.writeHead(204);
     return res.end();
   }
 
@@ -164,15 +198,6 @@ const server = http.createServer(async (req, res) => {
       return res.end("mediconny_clinic_webapp.html not found in server directory.");
     }
 
-    // Serve schema.sql download if requested
-    if (req.method === "GET" && pathname === "/schema.sql") {
-      const schemaPath = path.join(__dirname, "schema.sql");
-      if (fs.existsSync(schemaPath)) {
-        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-        return res.end(fs.readFileSync(schemaPath, "utf8"));
-      }
-    }
-
     // Health Check
     if (req.method === "GET" && pathname === "/api/health") {
       return sendJSON(res, 200, {
@@ -183,10 +208,73 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // ---------------- Authentication ----------------
+    const secureCookie = Boolean(req.socket.encrypted) || req.headers["x-forwarded-proto"] === "https";
+
+    if (req.method === "POST" && pathname === "/api/auth/login") {
+      const body = await parseBody(req);
+      const result = auth.login(body.username, body.password, req.socket.remoteAddress || "");
+      if (result.error) return sendJSON(res, result.status || 401, { error: result.error });
+      return sendJSON(res, 200, { user: result.user }, {
+        "Set-Cookie": auth.cookieHeader(result.token, secureCookie, 8 * 60 * 60)
+      });
+    }
+
+    if (req.method === "POST" && pathname === "/api/auth/logout") {
+      auth.logout(req);
+      return sendJSON(res, 200, { status: "signed out" }, { "Set-Cookie": auth.cookieHeader("", secureCookie, 0) });
+    }
+
+    // Everything below requires a signed-in, active staff member.
+    const user = auth.authenticate(req);
+    if (!user) return sendJSON(res, 401, { error: "Authentication required." });
+
+    if (req.method === "GET" && pathname === "/api/auth/me") {
+      return sendJSON(res, 200, { user: auth.publicUser(user) });
+    }
+
+    if (req.method === "POST" && pathname === "/api/auth/password") {
+      const body = await parseBody(req);
+      const result = auth.changeOwnPassword(user, body.currentPassword, body.newPassword);
+      if (result.error) return sendJSON(res, result.status || 400, { error: result.error });
+      return sendJSON(res, 200, { status: "password updated" });
+    }
+
+    if (user.mustChange) {
+      return sendJSON(res, 403, { error: "You must change your temporary password before continuing.", mustChange: true });
+    }
+
+    // ---------------- Role-based access control ----------------
+    const requiredRoles = rolesFor(req.method, pathname);
+    if (requiredRoles && !requiredRoles.includes(user.role)) {
+      return sendJSON(res, 403, { error: "Your role (" + roleLabel(user.role) + ") is not allowed to do this." });
+    }
+
+    // Staff management (Admin only)
+    if (pathname === "/api/staff" || pathname.startsWith("/api/staff/")) {
+      if (user.role !== "Admin") return sendJSON(res, 403, { error: "Admin access required." });
+      const staffId = pathname.startsWith("/api/staff/") ? decodeURIComponent(pathname.replace("/api/staff/", "")) : null;
+      if (req.method === "GET" && !staffId) return sendJSON(res, 200, { staff: auth.listStaff() });
+      if (req.method === "POST" && !staffId) {
+        const result = auth.createStaff(await parseBody(req));
+        if (result.error) return sendJSON(res, result.status || 400, { error: result.error });
+        return sendJSON(res, 201, { user: result.user });
+      }
+      if (req.method === "PATCH" && staffId) {
+        const result = auth.updateStaff(staffId, await parseBody(req), user.id);
+        if (result.error) return sendJSON(res, result.status || 400, { error: result.error });
+        return sendJSON(res, 200, { user: result.user });
+      }
+      if (req.method === "DELETE" && staffId) {
+        const result = auth.deleteStaff(staffId, user.id);
+        if (result.error) return sendJSON(res, result.status || 400, { error: result.error });
+        return sendJSON(res, 200, { status: "deleted", id: staffId });
+      }
+    }
+
     // GET Full State
     if (req.method === "GET" && pathname === "/api/state") {
-      const db = readDatabase();
-      return sendJSON(res, 200, db);
+      return sendJSON(res, 200, stateForRole(readDatabase(), user.role));
     }
 
     // PUT Full State (Restore Backup / Reset)
@@ -402,7 +490,8 @@ const server = http.createServer(async (req, res) => {
         totalPaid: Number(saleReq.totalPaid) || Number(saleReq.total) || 0,
         changeDue: Number(saleReq.changeDue) || 0,
         paymentMethod: saleReq.paymentMethod || "Cash",
-        note: saleReq.note || ""
+        note: saleReq.note || "",
+        cashier: user.fullName
       };
 
       // If linked to an appointment, mark appointment Completed

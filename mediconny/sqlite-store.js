@@ -72,7 +72,7 @@ function open(dbPath, schemaPath, defaults) {
         consultationType: r.consultation_type || "", consultationFee: r.consultation_fee,
         discount: r.discount_amount, tax: r.tax_amount, total: r.total_due,
         payments: payBySale[r.id] || [], totalPaid: r.total_paid, changeDue: r.change_due,
-        paymentMethod: r.payment_summary, note: r.sale_note || ""
+        paymentMethod: r.payment_summary, note: r.sale_note || "", cashier: r.cashier_name || ""
       }))
     };
   }
@@ -118,8 +118,8 @@ function open(dbPath, schemaPath, defaults) {
       }
 
       const insSale = db.prepare(`INSERT INTO sales (id, receipt_no, sale_timestamp, patient_id, patient_name, appointment_id, products_subtotal,
-                                    consultation_type, consultation_fee, discount_amount, tax_rate, tax_amount, total_due, total_paid, change_due, payment_summary, sale_note)
-                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`);
+                                    consultation_type, consultation_fee, discount_amount, tax_rate, tax_amount, total_due, total_paid, change_due, payment_summary, sale_note, cashier_name)
+                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)`);
       const insItem = db.prepare(`INSERT INTO sale_items (sale_id, product_id, sku, product_name, unit_price, quantity, line_total)
                                   VALUES (?, ?, ?, ?, ?, ?, ?)`);
       const insPay = db.prepare(`INSERT INTO sale_payments (sale_id, payment_method, amount, reference_note) VALUES (?, ?, ?, ?)`);
@@ -127,7 +127,7 @@ function open(dbPath, schemaPath, defaults) {
         insSale.run(s.id, s.receiptNo, s.timestamp, ptIds.has(s.patientId) ? s.patientId : null,
           s.patientName || "Walk-In Customer", apptIds.has(s.appointmentId) ? s.appointmentId : null,
           num(s.subtotal), s.consultationType || "", num(s.consultationFee), num(s.discount),
-          num(s.tax), num(s.total), num(s.totalPaid), num(s.changeDue), s.paymentMethod || "Cash", s.note || "");
+          num(s.tax), num(s.total), num(s.totalPaid), num(s.changeDue), s.paymentMethod || "Cash", s.note || "", s.cashier || "Shop Desk");
         for (const l of s.items || []) {
           const qty = Math.trunc(num(l.qty));
           if (qty <= 0) continue;
@@ -147,7 +147,7 @@ function open(dbPath, schemaPath, defaults) {
   }
 
   const isEmpty = !db.prepare("SELECT 1 FROM clinic_settings LIMIT 1").get();
-  return { engine, read, write, isEmpty };
+  return { engine, read, write, isEmpty, db };
 }
 
 module.exports = { open };

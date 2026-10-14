@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS staff_users (
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('Admin', 'Clinician', 'Pharmacist/Shop', 'Receptionist')),
     active INTEGER NOT NULL DEFAULT 1,
+    password_hash TEXT NOT NULL DEFAULT '',
+    must_change INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 

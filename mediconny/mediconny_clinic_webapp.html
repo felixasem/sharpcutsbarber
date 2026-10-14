@@ -360,6 +360,7 @@
     input[type="date"],
     input[type="time"],
     input[type="tel"],
+    input[type="password"],
     input[type="email"],
     select,
     textarea {
@@ -653,6 +654,15 @@
       white-space: pre-wrap;
     }
 
+    /* Role-based visibility */
+    body:not(.role-admin) .needs-admin { display: none !important; }
+    body.role-cashier .needs-clinical { display: none !important; }
+    body.role-clinician .needs-sales { display: none !important; }
+    body.locked .nav-bar, body.locked .main-container { display: none !important; }
+    .login-error { color: var(--danger); font-size: 0.82rem; min-height: 1.2rem; margin-top: 0.4rem; }
+    .user-chip { display: none; }
+    .user-chip.visible { display: inline-flex; }
+
     @media print {
       body * {
         visibility: hidden;
@@ -688,8 +698,8 @@
         <span id="serverDot" class="status-dot local"></span>
         <span id="serverStatusText">Syncing...</span>
       </div>
-      <label for="currencySelect" style="font-size:0.77rem; color:#d1fae5;">Currency:</label>
-      <select id="currencySelect" class="currency-select" onchange="updateCurrency(this.value)">
+      <label for="currencySelect" class="needs-admin" style="font-size:0.77rem; color:#d1fae5;">Currency:</label>
+      <select id="currencySelect" class="currency-select needs-admin" onchange="updateCurrency(this.value)">
         <option value="GHC">GHC (GH₵)</option>
         <option value="GH₵">GH₵ (Symbol)</option>
         <option value="$">$ (USD)</option>
@@ -697,10 +707,13 @@
         <option value="£">£ (GBP)</option>
         <option value="₦">₦ (NGN)</option>
       </select>
-      <button class="btn btn-ghost-light" onclick="exportAllDataJSON()">Export Backup</button>
-      <button class="btn btn-ghost-light" onclick="document.getElementById('importFile').click()">Restore Backup</button>
+      <button class="btn btn-ghost-light needs-admin" onclick="exportAllDataJSON()">Export Backup</button>
+      <button class="btn btn-ghost-light needs-admin" onclick="document.getElementById('importFile').click()">Restore Backup</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importAllDataJSON(event)" />
-      <button class="btn btn-ghost-light" onclick="clearAllData()">Reset All</button>
+      <button class="btn btn-ghost-light needs-admin" onclick="clearAllData()">Reset All</button>
+      <span id="authUser" class="server-pill user-chip"></span>
+      <button id="btnChangePw" class="btn btn-ghost-light user-chip" onclick="openPasswordModal(false)">Change Password</button>
+      <button id="btnLogout" class="btn btn-ghost-light user-chip" onclick="logout()">Sign Out</button>
     </div>
   </header>
 
@@ -728,6 +741,9 @@
     <button class="nav-tab" onclick="switchTab('settings', this)">
       <span>Clinic &amp; Receipt Settings</span>
     </button>
+    <button class="nav-tab" onclick="switchTab('staff', this)">
+      <span>Staff &amp; Access</span>
+    </button>
   </nav>
 
   <!-- Main Content -->
@@ -735,7 +751,7 @@
 
     <!-- KPI Overview Strip -->
     <section class="kpi-grid">
-      <div class="kpi-card">
+      <div class="kpi-card needs-sales">
         <div class="kpi-label">Today's Clinic &amp; Shop Revenue</div>
         <div class="kpi-value" id="kpiTodayRevenue">GHC 0.00</div>
         <div class="kpi-sub" id="kpiTodaySalesCount">0 transactions today</div>
@@ -764,7 +780,7 @@
         <div class="card">
           <div class="card-header">
             <span class="card-title">Clinic Shop Catalog — Vitamins &amp; Supplements</span>
-            <button class="btn btn-outline btn-sm" onclick="switchTabByName('inventory')">+ Manage Inventory</button>
+            <button class="btn btn-outline btn-sm needs-admin" onclick="switchTabByName('inventory')">+ Manage Inventory</button>
           </div>
           <div class="filter-bar">
             <input type="text" id="posSearch" placeholder="Search by product name, SKU, or dosage form..." oninput="renderPOSCatalog()" />
@@ -888,7 +904,7 @@
 
     <!-- 2. INVENTORY TAB -->
     <section id="tab-inventory" class="tab-panel">
-      <div class="card">
+      <div class="card needs-admin">
         <div class="card-header">
           <span class="card-title" id="invFormTitle">Add New Vitamin / Supplement to Inventory</span>
           <button class="btn btn-outline btn-sm" onclick="resetInventoryForm()">Reset Form</button>
@@ -971,12 +987,12 @@
                 <th>SKU</th>
                 <th>Product &amp; Form</th>
                 <th>Category</th>
-                <th class="num">Unit Cost</th>
+                <th class="num needs-admin">Unit Cost</th>
                 <th class="num">Selling Price</th>
                 <th class="num">In Stock</th>
                 <th>Batch / Expiry</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th class="needs-admin">Actions</th>
               </tr>
             </thead>
             <tbody id="inventoryTableBody"></tbody>
@@ -987,7 +1003,7 @@
 
     <!-- 3. CLINIC APPOINTMENTS TAB -->
     <section id="tab-appointments" class="tab-panel">
-      <div class="card">
+      <div class="card needs-clinical">
         <div class="card-header">
           <span class="card-title" id="apptFormTitle">Schedule Clinic Appointment</span>
           <button class="btn btn-outline btn-sm" onclick="resetAppointmentForm()">Reset Form</button>
@@ -1085,7 +1101,7 @@
 
     <!-- 4. PATIENTS DATABASE TAB -->
     <section id="tab-patients" class="tab-panel">
-      <div class="card">
+      <div class="card needs-clinical">
         <div class="card-header">
           <span class="card-title" id="patientFormTitle">Register Clinic Patient</span>
           <button class="btn btn-outline btn-sm" onclick="resetPatientForm()">Reset Form</button>
@@ -1138,7 +1154,7 @@
           <span class="card-title">Patients Directory</span>
           <div class="filter-bar">
             <input type="text" id="ptSearch" placeholder="Search by name, ID, phone, or notes..." oninput="renderPatientsTable()" />
-            <button class="btn btn-outline btn-sm" onclick="exportPatientsCSV()">Export CSV</button>
+            <button class="btn btn-outline btn-sm needs-clinical" onclick="exportPatientsCSV()">Export CSV</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -1226,7 +1242,119 @@
       </div>
     </section>
 
+    <!-- 7. STAFF & ACCESS TAB (Admin only) -->
+    <section id="tab-staff" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Add Staff Account</span>
+        </div>
+        <form id="staffForm" onsubmit="saveStaff(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="stName">Full Name *</label>
+              <input type="text" id="stName" required placeholder="e.g., Dr. Kofi Adjei" />
+            </div>
+            <div class="form-group">
+              <label for="stUser">Username *</label>
+              <input type="text" id="stUser" required pattern="[A-Za-z0-9._-]{3,32}" placeholder="letters, numbers, . _ -" autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label for="stRole">Role *</label>
+              <select id="stRole" required>
+                <option value="Clinician">Doctor / Nurse</option>
+                <option value="Pharmacist/Shop">Shop Cashier</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="stPass">Temporary Password *</label>
+              <input type="password" id="stPass" required minlength="8" autocomplete="new-password" placeholder="min 8 characters" />
+            </div>
+          </div>
+          <div style="margin-top:0.95rem;">
+            <button type="submit" class="btn btn-primary">Create Account</button>
+            <span style="font-size:0.78rem; color:var(--text-muted); margin-left:0.6rem;">The user must change this password at first sign-in.</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Staff Accounts &amp; Permissions</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="staffTableBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:1rem; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
+          <strong>Admin:</strong> everything, including inventory costs, settings, backups, staff and deletions.<br />
+          <strong>Doctor / Nurse:</strong> patients (incl. medical notes) and appointments; view-only inventory; no sales or revenue.<br />
+          <strong>Shop Cashier:</strong> POS sales and receipts; view-only inventory, patients (no medical notes) and appointments.
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal-backdrop">
+    <form class="modal" style="max-width:380px;" onsubmit="submitLogin(event)">
+      <div class="brand" style="margin-bottom:1rem;">
+        <div class="brand-badge" style="background:var(--primary); color:#fff;">M</div>
+        <div>
+          <div class="card-title">Staff Sign In</div>
+          <div style="font-size:0.78rem; color:var(--text-muted);">Mediconny Clinic &amp; Supplement Shop</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="loginUser">Username</label>
+        <input type="text" id="loginUser" autocomplete="username" required />
+      </div>
+      <div class="form-group" style="margin-top:0.6rem;">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password" required style="width:100%; padding:0.52rem 0.68rem; border:1px solid var(--border); border-radius:6px;" />
+      </div>
+      <div id="loginError" class="login-error" role="alert"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.6rem; padding:0.65rem;">Sign In</button>
+    </form>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="passwordModal" class="modal-backdrop">
+    <form class="modal" style="max-width:400px;" onsubmit="submitPasswordChange(event)">
+      <div class="card-title" id="pwTitle" style="margin-bottom:0.3rem;">Change Password</div>
+      <div id="pwForcedNote" style="font-size:0.8rem; color:var(--accent); margin-bottom:0.6rem; display:none;">
+        You are using a temporary password. Choose a new one to continue.
+      </div>
+      <div class="form-group">
+        <label for="pwCurrent">Current Password</label>
+        <input type="password" id="pwCurrent" autocomplete="current-password" required style="width:100%; padding:0.52rem 0.68rem; border:1px solid var(--border); border-radius:6px;" />
+      </div>
+      <div class="form-group" style="margin-top:0.6rem;">
+        <label for="pwNew">New Password (min 8 characters)</label>
+        <input type="password" id="pwNew" autocomplete="new-password" required minlength="8" style="width:100%; padding:0.52rem 0.68rem; border:1px solid var(--border); border-radius:6px;" />
+      </div>
+      <div class="form-group" style="margin-top:0.6rem;">
+        <label for="pwConfirm">Confirm New Password</label>
+        <input type="password" id="pwConfirm" autocomplete="new-password" required minlength="8" style="width:100%; padding:0.52rem 0.68rem; border:1px solid var(--border); border-radius:6px;" />
+      </div>
+      <div id="pwError" class="login-error" role="alert"></div>
+      <div style="display:flex; gap:0.6rem; justify-content:flex-end; margin-top:0.6rem;">
+        <button type="button" id="pwCancel" class="btn btn-outline" onclick="closePasswordModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </div>
+    </form>
+  </div>
 
   <!-- Receipt Modal -->
   <div id="receiptModal" class="modal-backdrop">
@@ -1267,35 +1395,288 @@
     };
 
     /* ---------------- FULL-STACK NODE.JS SYNC + LOCAL FALLBACK ---------------- */
-    async function initApp() {
-      // First load local cache
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          state = Object.assign(state, parsed);
-          state.settings = Object.assign({}, state.settings, parsed.settings || {});
-        }
-      } catch (e) {
-        console.warn("Local storage load warning:", e);
-      }
+    /* ---------------- AUTH & ROLES ---------------- */
+    let currentUser = null;
+    const ROLE_CLASS = { "Admin": "role-admin", "Clinician": "role-clinician", "Pharmacist/Shop": "role-cashier" };
+    const ROLE_LABEL = { "Admin": "Admin", "Clinician": "Doctor / Nurse", "Pharmacist/Shop": "Shop Cashier" };
+    const ALL_ROLES = ["Admin", "Clinician", "Pharmacist/Shop"];
+    const TAB_ROLES = {
+      pos: ["Admin", "Pharmacist/Shop"],
+      inventory: ALL_ROLES,
+      appointments: ALL_ROLES,
+      patients: ALL_ROLES,
+      sales: ["Admin", "Pharmacist/Shop"],
+      settings: ["Admin"],
+      staff: ["Admin"]
+    };
+    const HOME_TAB = { "Admin": "pos", "Pharmacist/Shop": "pos", "Clinician": "appointments" };
 
-      // Attempt connection to Node.js backend (/api/state)
+    function showLogin(message) {
+      currentUser = null;
+      document.body.classList.add("locked");
+      document.body.classList.remove("role-admin", "role-clinician", "role-cashier");
+      document.querySelectorAll(".user-chip").forEach(el => el.classList.remove("visible"));
+      document.getElementById("passwordModal").classList.remove("open");
+      document.getElementById("receiptModal").classList.remove("open");
+      document.getElementById("loginError").textContent = message || "";
+      document.getElementById("loginPass").value = "";
+      document.getElementById("loginModal").classList.add("open");
+      document.getElementById("loginUser").focus();
+    }
+
+    function resetLocalState() {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      state.inventory = []; state.patients = []; state.appointments = []; state.sales = []; state.cart = [];
+      state.splitPayments = [{ method: "Mobile Money (MoMo)", amount: 0, ref: "" }];
+    }
+
+    async function submitLogin(e) {
+      e.preventDefault();
+      const errEl = document.getElementById("loginError");
+      errEl.textContent = "";
       try {
-        const res = await fetch("/api/state", { cache: "no-store" });
-        if (res.ok) {
-          const serverState = await res.json();
-          isServerConnected = true;
-          state.currency = serverState.currency || state.currency || "GHC";
-          state.settings = Object.assign({}, state.settings, serverState.settings || {});
-          state.inventory = Array.isArray(serverState.inventory) ? serverState.inventory : [];
-          state.patients = Array.isArray(serverState.patients) ? serverState.patients : [];
-          state.appointments = Array.isArray(serverState.appointments) ? serverState.appointments : [];
-          state.sales = Array.isArray(serverState.sales) ? serverState.sales : [];
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: document.getElementById("loginUser").value,
+            password: document.getElementById("loginPass").value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || "Sign in failed."; return; }
+        document.getElementById("loginPass").value = "";
+        document.getElementById("loginModal").classList.remove("open");
+        resetLocalState();
+        await startSession(data.user);
+      } catch (err) {
+        errEl.textContent = "Cannot reach the server.";
+      }
+    }
+
+    async function logout() {
+      try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
+      resetLocalState();
+      refreshAllViews();
+      showLogin();
+    }
+
+    function applyRoleUI() {
+      const role = currentUser.role;
+      document.body.classList.remove("locked", "role-admin", "role-clinician", "role-cashier");
+      document.body.classList.add(ROLE_CLASS[role] || "role-cashier");
+      const chip = document.getElementById("authUser");
+      chip.textContent = currentUser.fullName + " \u2022 " + (ROLE_LABEL[role] || role);
+      document.querySelectorAll(".user-chip").forEach(el => el.classList.add("visible"));
+
+      document.querySelectorAll(".nav-tab").forEach(btn => {
+        const m = /switchTab\('(\w+)'/.exec(btn.getAttribute("onclick") || "");
+        const allowed = m && (TAB_ROLES[m[1]] || ALL_ROLES).includes(role);
+        btn.style.display = allowed ? "" : "none";
+      });
+      switchTabByName(HOME_TAB[role] || "inventory");
+    }
+
+    async function startSession(user) {
+      currentUser = user;
+      applyRoleUI();
+      if (user.mustChange) {
+        openPasswordModal(true);
+        return;
+      }
+      await loadAppData(false);
+      if (user.role === "Admin") loadStaff();
+    }
+
+    function openPasswordModal(forced) {
+      document.getElementById("pwForcedNote").style.display = forced ? "block" : "none";
+      document.getElementById("pwCancel").style.display = forced ? "none" : "";
+      document.getElementById("pwError").textContent = "";
+      ["pwCurrent", "pwNew", "pwConfirm"].forEach(id => { document.getElementById(id).value = ""; });
+      document.getElementById("passwordModal").dataset.forced = forced ? "1" : "";
+      document.getElementById("passwordModal").classList.add("open");
+      document.getElementById("pwCurrent").focus();
+    }
+
+    function closePasswordModal() {
+      if (document.getElementById("passwordModal").dataset.forced) return;
+      document.getElementById("passwordModal").classList.remove("open");
+    }
+
+    async function submitPasswordChange(e) {
+      e.preventDefault();
+      const errEl = document.getElementById("pwError");
+      errEl.textContent = "";
+      const next = document.getElementById("pwNew").value;
+      if (next !== document.getElementById("pwConfirm").value) { errEl.textContent = "New passwords do not match."; return; }
+      try {
+        const res = await fetch("/api/auth/password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPassword: document.getElementById("pwCurrent").value, newPassword: next })
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || "Could not change password."; return; }
+        const wasForced = !!document.getElementById("passwordModal").dataset.forced;
+        document.getElementById("passwordModal").dataset.forced = "";
+        document.getElementById("passwordModal").classList.remove("open");
+        currentUser.mustChange = false;
+        if (wasForced) {
+          await loadAppData(false);
+          if (currentUser.role === "Admin") loadStaff();
+        } else {
+          alert("Password updated.");
         }
       } catch (err) {
+        errEl.textContent = "Cannot reach the server.";
+      }
+    }
+
+    /* ---------------- STAFF MANAGEMENT (Admin) ---------------- */
+    let staffList = [];
+
+    async function staffApi(url, method, payload) {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: payload ? JSON.stringify(payload) : undefined
+      });
+      let data = {};
+      try { data = await res.json(); } catch (e) {}
+      if (res.status === 401) { showLogin("Your session has expired. Please sign in again."); throw new Error("expired"); }
+      if (!res.ok) { alert(data.error || "Request failed (" + res.status + ")."); return null; }
+      return data;
+    }
+
+    async function loadStaff() {
+      try {
+        const data = await staffApi("/api/staff", "GET");
+        if (data) { staffList = data.staff || []; renderStaffTable(); }
+      } catch (e) {}
+    }
+
+    function renderStaffTable() {
+      const tbody = document.getElementById("staffTableBody");
+      if (!staffList.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No staff accounts.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = staffList.map(u => {
+        const self = currentUser && u.id === currentUser.id;
+        const statusBadge = u.active
+          ? '<span class="badge badge-success">Active</span>'
+          : '<span class="badge badge-neutral">Disabled</span>';
+        const pw = u.mustChange ? ' <span class="badge badge-warn">Temp password</span>' : "";
+        return `
+          <tr>
+            <td><strong>${escapeHtml(u.fullName)}</strong>${self ? ' <span class="badge badge-neutral">You</span>' : ""}</td>
+            <td>${escapeHtml(u.username)}</td>
+            <td>${escapeHtml(ROLE_LABEL[u.role] || u.role)}</td>
+            <td>${statusBadge}${pw}</td>
+            <td>
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="resetStaffPassword('${u.id}')">Reset Password</button>
+                ${self ? "" : `<button class="btn btn-outline btn-sm" onclick="toggleStaffActive('${u.id}')">${u.active ? "Disable" : "Enable"}</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteStaffAccount('${u.id}')">Delete</button>`}
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+    }
+
+    async function saveStaff(e) {
+      e.preventDefault();
+      try {
+        const data = await staffApi("/api/staff", "POST", {
+          fullName: document.getElementById("stName").value.trim(),
+          username: document.getElementById("stUser").value.trim(),
+          role: document.getElementById("stRole").value,
+          password: document.getElementById("stPass").value
+        });
+        if (data) { document.getElementById("staffForm").reset(); await loadStaff(); }
+      } catch (err) {}
+    }
+
+    async function toggleStaffActive(id) {
+      const u = staffList.find(x => x.id === id);
+      if (!u) return;
+      try {
+        if (await staffApi("/api/staff/" + encodeURIComponent(id), "PATCH", { active: !u.active })) await loadStaff();
+      } catch (err) {}
+    }
+
+    async function resetStaffPassword(id) {
+      const pw = prompt("Enter a new temporary password (min 8 characters). The user must change it at next sign-in:");
+      if (pw === null) return;
+      try {
+        if (await staffApi("/api/staff/" + encodeURIComponent(id), "PATCH", { password: pw })) {
+          alert("Password reset. The user will be signed out and must change it at next sign-in.");
+          await loadStaff();
+        }
+      } catch (err) {}
+    }
+
+    async function deleteStaffAccount(id) {
+      if (!confirm("Delete this staff account permanently?")) return;
+      try {
+        if (await staffApi("/api/staff/" + encodeURIComponent(id), "DELETE")) await loadStaff();
+      } catch (err) {}
+    }
+
+    /* ---------------- APP DATA LOAD ---------------- */
+    async function initApp() {
+      document.body.classList.add("locked");
+      let res = null;
+      try {
+        res = await fetch("/api/auth/me", { cache: "no-store" });
+      } catch (err) {
+        res = null; // no server reachable (e.g. opened as a local file)
+      }
+
+      if (res && res.status === 401) { showLogin(); return; }
+
+      if (res && res.ok) {
+        const data = await res.json();
+        await startSession(data.user);
+        return;
+      }
+
+      // Standalone browser mode: no backend, data stays in this browser only.
+      currentUser = { id: "local", username: "local", fullName: "Standalone", role: "Admin", mustChange: false };
+      applyRoleUI();
+      await loadAppData(true);
+    }
+
+    async function loadAppData(standalone) {
+      if (standalone) {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            state = Object.assign(state, parsed);
+            state.settings = Object.assign({}, state.settings, parsed.settings || {});
+          }
+        } catch (e) {
+          console.warn("Local storage load warning:", e);
+        }
         isServerConnected = false;
+      } else {
+        try {
+          const res = await fetch("/api/state", { cache: "no-store" });
+          if (res.status === 401) { showLogin("Your session has expired. Please sign in again."); return; }
+          if (res.ok) {
+            const serverState = await res.json();
+            isServerConnected = true;
+            state.currency = serverState.currency || state.currency || "GHC";
+            state.settings = Object.assign({}, state.settings, serverState.settings || {});
+            state.inventory = Array.isArray(serverState.inventory) ? serverState.inventory : [];
+            state.patients = Array.isArray(serverState.patients) ? serverState.patients : [];
+            state.appointments = Array.isArray(serverState.appointments) ? serverState.appointments : [];
+            state.sales = Array.isArray(serverState.sales) ? serverState.sales : [];
+          }
+        } catch (err) {
+          isServerConnected = false;
+        }
       }
 
       updateServerIndicator();
@@ -1321,10 +1702,12 @@
     }
 
     async function persistState(apiEndpoint, method, payload) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {
-        console.error("Failed local save:", e);
+      if (!isServerConnected) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          console.error("Failed local save:", e);
+        }
       }
 
       if (isServerConnected && apiEndpoint) {
@@ -1334,6 +1717,10 @@
             headers: { "Content-Type": "application/json" },
             body: payload ? JSON.stringify(payload) : undefined
           });
+          if (resp.status === 401) {
+            showLogin("Your session has expired. Please sign in again.");
+            return;
+          }
           if (!resp.ok) {
             // Server rejected the change: tell the user and re-sync from the server copy.
             let msg = "Server rejected the change (" + resp.status + ").";
@@ -1344,7 +1731,6 @@
               const sv = await fresh.json();
               state.inventory = sv.inventory; state.patients = sv.patients;
               state.appointments = sv.appointments; state.sales = sv.sales;
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             }
           }
         } catch (err) {
@@ -1412,9 +1798,8 @@
     }
 
     function switchTabByName(tabId) {
-      const tabs = document.querySelectorAll(".nav-tab");
-      const map = { pos: 0, inventory: 1, appointments: 2, patients: 3, sales: 4, settings: 5 };
-      switchTab(tabId, tabs[map[tabId]]);
+      const btn = Array.from(document.querySelectorAll(".nav-tab")).find(b => (b.getAttribute("onclick") || "").includes("'" + tabId + "'"));
+      switchTab(tabId, btn);
     }
 
     function refreshAllViews() {
@@ -1783,7 +2168,8 @@
         totalPaid,
         changeDue: Math.max(0, Number((totalPaid - total).toFixed(2))),
         paymentMethod: paymentSummary,
-        note
+        note,
+        cashier: currentUser && currentUser.id !== "local" ? currentUser.fullName : ""
       };
 
       if (linkedApptId) {
@@ -1813,6 +2199,7 @@
         `Receipt #: ${s.receiptNo}`,
         `Date:      ${dt}`,
         `Patient:   ${s.patientName}`,
+        s.cashier ? `Cashier:   ${s.cashier}` : "",
         "------------------------------------------"
       ].filter(Boolean);
 
@@ -1948,7 +2335,7 @@ Note: ${s.note}` : "",
       });
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="empty-state">No inventory items recorded yet. Use the form above to add vitamins and supplements.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state">No inventory items recorded yet.</td></tr>`;
         return;
       }
 
@@ -1970,7 +2357,7 @@ Note: ${s.note}` : "",
               <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(item.formType || '')}</div>
             </td>
             <td>${escapeHtml(item.category)}</td>
-            <td class="num">${fmtMoney(item.cost)}</td>
+            <td class="num needs-admin">${fmtMoney(item.cost)}</td>
             <td class="num"><strong>${fmtMoney(item.price)}</strong></td>
             <td class="num"><strong>${item.stock}</strong></td>
             <td>
@@ -1978,7 +2365,7 @@ Note: ${s.note}` : "",
               <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(item.expiry || 'No exp')}</div>
             </td>
             <td>${statusHtml}</td>
-            <td>
+            <td class="needs-admin">
               <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
                 <button class="btn btn-outline btn-sm" onclick="adjustStockPrompt('${item.id}')">Stock</button>
                 <button class="btn btn-outline btn-sm" onclick="editInventoryItem('${item.id}')">Edit</button>
@@ -2104,9 +2491,9 @@ Note: ${s.note}` : "",
             <td><span class="badge ${badge}">${escapeHtml(a.status)}</span></td>
             <td>
               <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" onclick="sendApptToPOS('${a.id}')">Bill at POS</button>
-                <button class="btn btn-outline btn-sm" onclick="editAppointment('${a.id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteAppointment('${a.id}')">Delete</button>
+                <button class="btn btn-primary btn-sm needs-sales" onclick="sendApptToPOS('${a.id}')">Bill at POS</button>
+                <button class="btn btn-outline btn-sm needs-clinical" onclick="editAppointment('${a.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm needs-admin" onclick="deleteAppointment('${a.id}')">Delete</button>
               </div>
             </td>
           </tr>
@@ -2211,8 +2598,8 @@ Note: ${s.note}` : "",
             <td class="num"><strong>${fmtMoney(spend)}</strong></td>
             <td>
               <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
-                <button class="btn btn-outline btn-sm" onclick="editPatient('${p.id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deletePatient('${p.id}')">Delete</button>
+                <button class="btn btn-outline btn-sm needs-clinical" onclick="editPatient('${p.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm needs-admin" onclick="deletePatient('${p.id}')">Delete</button>
               </div>
             </td>
           </tr>
