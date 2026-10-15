@@ -1,0 +1,21 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "start",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "mediconny/server.js"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "mediconny",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "mediconny/server.js"
+      ],
+      "port": 3000
+    }
+  ]
+}

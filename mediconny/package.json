@@ -1,0 +1,16 @@
+{
+  "name": "mediconny-clinic-pos-server",
+  "version": "1.0.0",
+  "description": "Full-stack Node.js server for Mediconny Clinic & Supplement Shop (Inventory, Appointments, Patients DB, and Split-Payment POS)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^9.4.0"
+  }
+}
